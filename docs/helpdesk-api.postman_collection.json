@@ -1,0 +1,2582 @@
+{
+  "info": {
+    "name": "Support Helpdesk API",
+    "description": "Every endpoint of the helpdesk API.\n\nGETTING STARTED\n1. Start the API: `php artisan serve --port=8080`\n2. Run one of the three requests in `Sign in`. It stores the access token automatically, so every other request just works.\n3. To act as a different role, run a different sign-in request.\n\nThe refresh token is an httpOnly cookie. Postman keeps it in its own cookie jar, so `Refresh session` works with no setup.\n\nAccess tokens last 10 minutes. If requests start returning 401 with `AUTH_TOKEN_STALE`, run `Refresh session` or sign in again.\n\nSEEDED LOGINS (password `Passw0rd!` for all)\n  admin@example.com    Amina Admin       admin\n  sam@example.com      Sam Support       moderator\n  priya@example.com    Priya Agent       moderator\n  jordan@example.com   Jordan Employee   user\n  dana@example.com     Dana Former       user, deactivated\n\nEMAILS\nChanging a status or assigning a ticket emails the person who raised it. With the default settings those messages are written to storage/logs/laravel.log, so `tail -f storage/logs/laravel.log` shows them with no mail server needed.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8080/api",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "currentUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ticketId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "roleId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Sign in (one endpoint, five saved bodies)",
+      "description": "Every request in this folder is the same endpoint, POST /auth/login. They differ only in the credentials sent.\n\nThe first three store the access token, so running one is how you switch role. The last two show what failure looks like.",
+      "item": [
+        {
+          "name": "Sign in as admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Full access: accounts, categories, metrics, deleting tickets.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "Signed in",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Full access: accounts, categories, metrics, deleting tickets.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Passw0rd!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"user\": {\n      \"id\": \"01m1sbqwmkk70f8yddhr569mq5\",\n      \"name\": \"Lena Fischer\",\n      \"email\": \"lena@example.com\",\n      \"role\": \"user\",\n      \"isActive\": true,\n      \"createdAt\": \"2026-09-05T18:01:55+00:00\",\n      \"lastLoginAt\": \"2026-09-05T18:05:28+00:00\"\n    },\n    \"accessToken\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJoZWxwZGVzay1hcGkiLCJhdWQiOiJoZWxwZGVzay13ZWIiLCJzdWIiOiIwMW0xc2Jxd21razcwZjh5ZGRocjU2OW1xNSIsImp0aSI6IjAxTTFTQllDSkpNR0VDREQxU0dZNzAyUEdUIiwiaWF0IjoxNzg4NjMxNTI4LCJleHAiOjE3ODg2MzIxMjgsInJvbGUiOiJ1c2VyIiwidmVyIjoxfQ.FIAxH2AM0-FF0aw7KCEqC_opZaVTQTAzyAA3BZrpKZ0\",\n    \"expiresIn\": 600\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (pm.response.code === 200) {",
+                  "    pm.collectionVariables.set('accessToken', body.data.accessToken);",
+                  "    pm.collectionVariables.set('currentUserId', body.data.user.id);",
+                  "    console.log('Signed in as ' + body.data.user.role);",
+                  "}",
+                  "pm.test('signed in', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign in as moderator",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Works the shared queue. Cannot manage accounts or delete tickets.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sam@example.com\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "Signed in",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Works the shared queue. Cannot manage accounts or delete tickets.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"sam@example.com\",\n  \"password\": \"Passw0rd!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"user\": {\n      \"id\": \"01m1sbqwmkk70f8yddhr569mq5\",\n      \"name\": \"Lena Fischer\",\n      \"email\": \"lena@example.com\",\n      \"role\": \"user\",\n      \"isActive\": true,\n      \"createdAt\": \"2026-09-05T18:01:55+00:00\",\n      \"lastLoginAt\": \"2026-09-05T18:05:28+00:00\"\n    },\n    \"accessToken\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJoZWxwZGVzay1hcGkiLCJhdWQiOiJoZWxwZGVzay13ZWIiLCJzdWIiOiIwMW0xc2Jxd21razcwZjh5ZGRocjU2OW1xNSIsImp0aSI6IjAxTTFTQllDSkpNR0VDREQxU0dZNzAyUEdUIiwiaWF0IjoxNzg4NjMxNTI4LCJleHAiOjE3ODg2MzIxMjgsInJvbGUiOiJ1c2VyIiwidmVyIjoxfQ.FIAxH2AM0-FF0aw7KCEqC_opZaVTQTAzyAA3BZrpKZ0\",\n    \"expiresIn\": 600\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (pm.response.code === 200) {",
+                  "    pm.collectionVariables.set('accessToken', body.data.accessToken);",
+                  "    pm.collectionVariables.set('currentUserId', body.data.user.id);",
+                  "    console.log('Signed in as ' + body.data.user.role);",
+                  "}",
+                  "pm.test('signed in', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign in as employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Sees only their own tickets.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jordan@example.com\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "Signed in",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Sees only their own tickets.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"jordan@example.com\",\n  \"password\": \"Passw0rd!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"user\": {\n      \"id\": \"01m1sbqwmkk70f8yddhr569mq5\",\n      \"name\": \"Lena Fischer\",\n      \"email\": \"lena@example.com\",\n      \"role\": \"user\",\n      \"isActive\": true,\n      \"createdAt\": \"2026-09-05T18:01:55+00:00\",\n      \"lastLoginAt\": \"2026-09-05T18:05:28+00:00\"\n    },\n    \"accessToken\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJoZWxwZGVzay1hcGkiLCJhdWQiOiJoZWxwZGVzay13ZWIiLCJzdWIiOiIwMW0xc2Jxd21razcwZjh5ZGRocjU2OW1xNSIsImp0aSI6IjAxTTFTQllDSkpNR0VDREQxU0dZNzAyUEdUIiwiaWF0IjoxNzg4NjMxNTI4LCJleHAiOjE3ODg2MzIxMjgsInJvbGUiOiJ1c2VyIiwidmVyIjoxfQ.FIAxH2AM0-FF0aw7KCEqC_opZaVTQTAzyAA3BZrpKZ0\",\n    \"expiresIn\": 600\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (pm.response.code === 200) {",
+                  "    pm.collectionVariables.set('accessToken', body.data.accessToken);",
+                  "    pm.collectionVariables.set('currentUserId', body.data.user.id);",
+                  "    console.log('Signed in as ' + body.data.user.role);",
+                  "}",
+                  "pm.test('signed in', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign in with a wrong password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Returns 401. The message is the same for a wrong password and an unknown address, so login cannot be used to find out who has an account.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jordan@example.com\",\n  \"password\": \"wrong\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "Rejected",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Returns 401. The message is the same for a wrong password and an unknown address, so login cannot be used to find out who has an account.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"jordan@example.com\",\n  \"password\": \"wrong\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": {\n    \"code\": \"AUTH_INVALID_CREDENTIALS\",\n    \"message\": \"Those credentials do not match our records.\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Sign in to a deactivated account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Returns 403. Only said after the password is correct, so it does not reveal that the account exists.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"dana@example.com\",\n  \"password\": \"Passw0rd!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "Account deactivated",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Returns 403. Only said after the password is correct, so it does not reveal that the account exists.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"dana@example.com\",\n  \"password\": \"Passw0rd!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": {\n    \"code\": \"AUTH_ACCOUNT_DISABLED\",\n    \"message\": \"This account has been deactivated.\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Session",
+      "item": [
+        {
+          "name": "Who am I",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "The signed-in user plus everything their role allows. The frontend uses this to decide what to show, instead of guessing from the role name."
+          },
+          "response": [
+            {
+              "name": "Signed in",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "me"
+                  ]
+                },
+                "description": "The signed-in user plus everything their role allows. The frontend uses this to decide what to show, instead of guessing from the role name."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"user\": {\n      \"id\": \"01m1sbqvwfjw0ratxbgj62e2be\",\n      \"name\": \"Sam Support\",\n      \"email\": \"sam@example.com\",\n      \"role\": \"moderator\",\n      \"isActive\": true,\n      \"createdAt\": \"2026-09-05T18:01:54+00:00\",\n      \"lastLoginAt\": \"2026-09-05T18:05:27+00:00\"\n    },\n    \"permissions\": {\n      \"ticket:create\": \"all\",\n      \"ticket:read\": \"all\",\n      \"ticket:list_queue\": \"all\",\n      \"ticket:comment\": \"all\",\n      \"ticket:assign\": \"all\",\n      \"ticket:triage\": \"all\"\n    }\n  }\n}"
+            },
+            {
+              "name": "Not signed in",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "me"
+                  ]
+                },
+                "description": "The signed-in user plus everything their role allows. The frontend uses this to decide what to show, instead of guessing from the role name."
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": {\n    \"code\": \"AUTH_REQUIRED\",\n    \"message\": \"Authentication is required.\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Refresh session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Swaps the refresh cookie for a new access token and a new refresh cookie.\n\nThe old cookie stops working the moment it is used. Sending it twice means it leaked, so every session for that sign-in is ended.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "New token issued",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/refresh",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "refresh"
+                  ]
+                },
+                "description": "Swaps the refresh cookie for a new access token and a new refresh cookie.\n\nThe old cookie stops working the moment it is used. Sending it twice means it leaked, so every session for that sign-in is ended.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"user\": {\n      \"id\": \"01m1sbqw8e6ypgq808883zzqe4\",\n      \"name\": \"Jordan Employee\",\n      \"email\": \"jordan@example.com\",\n      \"role\": \"user\",\n      \"isActive\": true,\n      \"createdAt\": \"2026-09-05T18:01:54+00:00\",\n      \"lastLoginAt\": \"2026-09-05T18:05:27+00:00\"\n    },\n    \"accessToken\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJoZWxwZGVzay1hcGkiLCJhdWQiOiJoZWxwZGVzay13ZWIiLCJzdWIiOiIwMW0xc2JxdzhlNnlwZ3E4MDg4ODN6enFlNCIsImp0aSI6IjAxTTFTQllEMUVYWkM5SE5GV1hITTZNVEhOIiwiaWF0IjoxNzg4NjMxNTI4LCJleHAiOjE3ODg2MzIxMjgsInJvbGUiOiJ1c2VyIiwidmVyIjoxfQ.OlScumWuYwR87g4irpbzwblhyPnCU1a2MGLECexrHDg\",\n    \"expiresIn\": 600\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.collectionVariables.set('accessToken', pm.response.json().data.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign out",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Ends this session only. Other devices stay signed in. Safe to call twice.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "Signed out, no body",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/logout",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "logout"
+                  ]
+                },
+                "description": "Ends this session only. Other devices stay signed in. Safe to call twice.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "text",
+              "header": [],
+              "cookie": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "Sign out everywhere",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout-all"
+              ]
+            },
+            "description": "Ends every session for this account immediately, including the one making the request."
+          },
+          "response": [
+            {
+              "name": "Signed out everywhere, no body",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/logout-all",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "logout-all"
+                  ]
+                },
+                "description": "Ends every session for this account immediately, including the one making the request."
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "text",
+              "header": [],
+              "cookie": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "No sign-in needed. Confirms the API is up.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "Up",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/health",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "health"
+                  ]
+                },
+                "description": "No sign-in needed. Confirms the API is up.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"status\": \"ok\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tickets",
+      "item": [
+        {
+          "name": "List tickets",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "status",
+                  "value": "open,in_progress",
+                  "disabled": true,
+                  "description": "open, in_progress, resolved, closed"
+                },
+                {
+                  "key": "priority",
+                  "value": "high,urgent",
+                  "disabled": true,
+                  "description": "low, medium, high, urgent"
+                },
+                {
+                  "key": "category",
+                  "value": "it-access",
+                  "disabled": true,
+                  "description": "One or more category slugs"
+                },
+                {
+                  "key": "assignee",
+                  "value": "me",
+                  "disabled": true,
+                  "description": "me, unassigned, or a user id"
+                },
+                {
+                  "key": "search",
+                  "value": "vpn",
+                  "disabled": true,
+                  "description": "Searches subject and description"
+                },
+                {
+                  "key": "overdue",
+                  "value": "true",
+                  "disabled": true,
+                  "description": "true or false"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt",
+                  "disabled": true,
+                  "description": "createdAt, updatedAt, priority, status, dueAt, subject"
+                },
+                {
+                  "key": "sortDir",
+                  "value": "desc",
+                  "disabled": true,
+                  "description": "asc or desc"
+                }
+              ]
+            },
+            "description": "The main queue.\n\nFiltering, sorting and paging all happen in the database. Employees only ever see their own tickets, and no combination of filters changes that.\n\nTurn the greyed-out parameters on to try them."
+          },
+          "response": [
+            {
+              "name": "A page of tickets",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/tickets?page=1&limit=20",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "tickets"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "disabled": false,
+                      "description": ""
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20",
+                      "disabled": false,
+                      "description": ""
+                    },
+                    {
+                      "key": "status",
+                      "value": "open,in_progress",
+                      "disabled": true,
+                      "description": "open, in_progress, resolved, closed"
+                    },
+                    {
+                      "key": "priority",
+                      "value": "high,urgent",
+                      "disabled": true,
+                      "description": "low, medium, high, urgent"
+                    },
+                    {
+                      "key": "category",
+                      "value": "it-access",
+                      "disabled": true,
+                      "description": "One or more category slugs"
+                    },
+                    {
+                      "key": "assignee",
+                      "value": "me",
+                      "disabled": true,
+                      "description": "me, unassigned, or a user id"
+                    },
+                    {
+                      "key": "search",
+                      "value": "vpn",
+                      "disabled": true,
+                      "description": "Searches subject and description"
+                    },
+                    {
+                      "key": "overdue",
+                      "value": "true",
+                      "disabled": true,
+                      "description": "true or false"
+                    },
+                    {
+                      "key": "sortBy",
+                      "value": "createdAt",
+                      "disabled": true,
+                      "description": "createdAt, updatedAt, priority, status, dueAt, subject"
+                    },
+                    {
+                      "key": "sortDir",
+                      "value": "desc",
+                      "disabled": true,
+                      "description": "asc or desc"
+                    }
+                  ]
+                },
+                "description": "The main queue.\n\nFiltering, sorting and paging all happen in the database. Employees only ever see their own tickets, and no combination of filters changes that.\n\nTurn the greyed-out parameters on to try them."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"01m1sa89m58nnbsex1djcj36qg\",\n      \"subject\": \"Expense reimbursement not received\",\n      \"status\": \"in_progress\",\n      \"priority\": \"urgent\",\n      \"category\": {\n        \"id\": \"01m1sbqvfsjr4hx0a3bz7exant\",\n        \"slug\": \"hr-payroll\",\n        \"name\": \"HR - Payroll\"\n      },\n      \"requester\": {\n        \"id\": \"01m1sbqwtv40199y17xfqm6vqb\",\n        \"name\": \"Tariq Nasser\"\n      },\n      \"assignee\": {\n        \"id\": \"01m1sbqvpe6v7p6jjf58hnfne2\",\n        \"name\": \"Amina Admin\"\n      },\n      \"dueAt\": \"2026-09-05T21:35:55+00:00\",\n      \"isOverdue\": false,\n      \"resolvedAt\": null,\n      \"commentCount\": 3,\n      \"createdAt\": \"2026-09-05T17:35:55+00:00\",\n      \"updatedAt\": \"2026-09-05T17:35:55+00:00\"\n    },\n    {\n      \"id\": \"01m1s900j5cehjv848572bgpg8\",\n      \"subject\": \"Expense reimbursement not received\",\n      \"status\": \"in_progress\",\n      \"priority\": \"urgent\",\n      \"category\": {\n        \"id\": \"01m1sbqvfsjr4hx0a3bz7exant\",\n        \"slug\": \"hr-payroll\",\n        \"name\": \"HR - Payroll\"\n      },\n      \"requester\": {\n        \"id\": \"01m1sbqw8e6ypgq808883zzqe4\",\n        \"name\": \"Jordan Employee\"\n      },\n      \"assignee\": {\n        \"id\": \"01m1sbqw2ewmhrha27pg24gbsy\",\n        \"name\": \"Priya Agent\"\n      },\n      \"dueAt\": \"2026-09-05T21:13:55+00:00\",\n      \"isOverdue\": false,\n      \"resolvedAt\": null,\n      \"commentCount\": 1,\n      \"createdAt\": \"2026-09-05T17:13:55+00:00\",\n      \"updatedAt\": \"2026-09-05T17:13:55+00:00\"\n    }\n  ],\n  \"pagination\": {\n    \"page\": 1,\n    \"limit\": 2,\n    \"totalItems\": 195,\n    \"totalPages\": 98\n  }\n}"
+            },
+            {
+              "name": "Limit above the ceiling",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/tickets?page=1&limit=20",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "tickets"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "disabled": false,
+                      "description": ""
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20",
+                      "disabled": false,
+                      "description": ""
+                    },
+                    {
+                      "key": "status",
+                      "value": "open,in_progress",
+                      "disabled": true,
+                      "description": "open, in_progress, resolved, closed"
+                    },
+                    {
+                      "key": "priority",
+                      "value": "high,urgent",
+                      "disabled": true,
+                      "description": "low, medium, high, urgent"
+                    },
+                    {
+                      "key": "category",
+                      "value": "it-access",
+                      "disabled": true,
+                      "description": "One or more category slugs"
+                    },
+                    {
+                      "key": "assignee",
+                      "value": "me",
+                      "disabled": true,
+                      "description": "me, unassigned, or a user id"
+                    },
+                    {
+                      "key": "search",
+                      "value": "vpn",
+                      "disabled": true,
+                      "description": "Searches subject and description"
+                    },
+                    {
+                      "key": "overdue",
+                      "value": "true",
+                      "disabled": true,
+                      "description": "true or false"
+                    },
+                    {
+                      "key": "sortBy",
+                      "value": "createdAt",
+                      "disabled": true,
+                      "description": "createdAt, updatedAt, priority, status, dueAt, subject"
+                    },
+                    {
+                      "key": "sortDir",
+                      "value": "desc",
+                      "disabled": true,
+                      "description": "asc or desc"
+                    }
+                  ]
+                },
+                "description": "The main queue.\n\nFiltering, sorting and paging all happen in the database. Employees only ever see their own tickets, and no combination of filters changes that.\n\nTurn the greyed-out parameters on to try them."
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_FAILED\",\n    \"message\": \"The request failed validation.\",\n    \"details\": [\n      {\n        \"field\": \"limit\",\n        \"message\": \"The limit field must not be greater than 100.\"\n      }\n    ]\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const rows = pm.response.json().data;",
+                  "    if (rows.length) { pm.collectionVariables.set('ticketId', rows[0].id); }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Queue counters",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "summary"
+              ]
+            },
+            "description": "The numbers above the agent queue: unassigned, assigned to me, overdue, resolved today.\n\nAgents and admins only."
+          },
+          "response": [
+            {
+              "name": "Counters",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/tickets/summary",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "tickets",
+                    "summary"
+                  ]
+                },
+                "description": "The numbers above the agent queue: unassigned, assigned to me, overdue, resolved today.\n\nAgents and admins only."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"unassigned\": 45,\n    \"assignedToMe\": 30,\n    \"overdue\": 19,\n    \"resolvedToday\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "View a ticket",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{ticketId}}"
+              ]
+            },
+            "description": "Full ticket including the description and the whole reply thread.\n\nAn employee opening someone else's ticket gets 403."
+          },
+          "response": [
+            {
+              "name": "Ticket with its replies",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "tickets",
+                    "{{ticketId}}"
+                  ]
+                },
+                "description": "Full ticket including the description and the whole reply thread.\n\nAn employee opening someone else's ticket gets 403."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"id\": \"01m1sbyd4m4xbgpe2kq43dcemg\",\n    \"subject\": \"VPN will not connect from home\",\n    \"status\": \"open\",\n    \"priority\": \"high\",\n    \"category\": {\n      \"id\": \"01m1sbqvfsjr4hx0a3bz7exant\",\n      \"slug\": \"hr-payroll\",\n      \"name\": \"HR - Payroll\"\n    },\n    \"requester\": {\n      \"id\": \"01m1sbqw8e6ypgq808883zzqe4\",\n      \"name\": \"Jordan Employee\"\n    },\n    \"assignee\": null,\n    \"dueAt\": \"2026-09-06T18:05:28+00:00\",\n    \"isOverdue\": false,\n    \"resolvedAt\": null,\n    \"commentCount\": 0,\n    \"createdAt\": \"2026-09-05T18:05:28+00:00\",\n    \"updatedAt\": \"2026-09-05T18:05:28+00:00\",\n    \"description\": \"The connection fails during the handshake step. It works in the office.\",\n    \"closedAt\": null,\n    \"comments\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Raise a ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets"
+              ]
+            },
+            "description": "Anyone signed in can raise a ticket. It is always filed under the person making the request.\n\nThe deadline is set from the priority: urgent 4h, high 24h, medium 72h, low 168h.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"VPN will not connect from home\",\n  \"description\": \"The connection fails during the handshake step. It works fine in the office.\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"priority\": \"high\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/tickets",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "tickets"
+                  ]
+                },
+                "description": "Anyone signed in can raise a ticket. It is always filed under the person making the request.\n\nThe deadline is set from the priority: urgent 4h, high 24h, medium 72h, low 168h.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"subject\": \"VPN will not connect from home\",\n  \"description\": \"The connection fails during the handshake step. It works fine in the office.\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"priority\": \"high\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"id\": \"01m1sbyd4m4xbgpe2kq43dcemg\",\n    \"subject\": \"VPN will not connect from home\",\n    \"status\": \"open\",\n    \"priority\": \"high\",\n    \"category\": {\n      \"id\": \"01m1sbqvfsjr4hx0a3bz7exant\",\n      \"slug\": \"hr-payroll\",\n      \"name\": \"HR - Payroll\"\n    },\n    \"requester\": {\n      \"id\": \"01m1sbqw8e6ypgq808883zzqe4\",\n      \"name\": \"Jordan Employee\"\n    },\n    \"assignee\": null,\n    \"dueAt\": \"2026-09-06T18:05:28+00:00\",\n    \"isOverdue\": false,\n    \"resolvedAt\": null,\n    \"commentCount\": 0,\n    \"createdAt\": \"2026-09-05T18:05:28+00:00\",\n    \"updatedAt\": \"2026-09-05T18:05:28+00:00\",\n    \"description\": \"The connection fails during the handshake step. It works in the office.\",\n    \"closedAt\": null,\n    \"comments\": []\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('ticketId', pm.response.json().data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign a ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{ticketId}}"
+              ]
+            },
+            "description": "Agents and admins only.\n\nSend `\"assigneeId\": null` to put it back in the queue. Leaving the field out means do not touch the assignment.\n\nOnly active agents can be assigned; anyone else is rejected with 422.\n\nThe person who raised the ticket is emailed when someone picks it up. Handing it back to the queue sends nothing.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigneeId\": \"{{userId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "Assigned",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "tickets",
+                    "{{ticketId}}"
+                  ]
+                },
+                "description": "Agents and admins only.\n\nSend `\"assigneeId\": null` to put it back in the queue. Leaving the field out means do not touch the assignment.\n\nOnly active agents can be assigned; anyone else is rejected with 422.\n\nThe person who raised the ticket is emailed when someone picks it up. Handing it back to the queue sends nothing.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"assigneeId\": \"{{userId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"id\": \"01m1sbyd4m4xbgpe2kq43dcemg\",\n    \"subject\": \"VPN will not connect from home\",\n    \"status\": \"open\",\n    \"priority\": \"high\",\n    \"category\": {\n      \"id\": \"01m1sbqvfsjr4hx0a3bz7exant\",\n      \"slug\": \"hr-payroll\",\n      \"name\": \"HR - Payroll\"\n    },\n    \"requester\": {\n      \"id\": \"01m1sbqw8e6ypgq808883zzqe4\",\n      \"name\": \"Jordan Employee\"\n    },\n    \"assignee\": {\n      \"id\": \"01m1sbqvwfjw0ratxbgj62e2be\",\n      \"name\": \"Sam Support\"\n    },\n    \"dueAt\": \"2026-09-06T18:05:28+00:00\",\n    \"isOverdue\": false,\n    \"resolvedAt\": null,\n    \"commentCount\": 0,\n    \"createdAt\": \"2026-09-05T18:05:28+00:00\",\n    \"updatedAt\": \"2026-09-05T18:05:28+00:00\",\n    \"description\": \"The connection fails during the handshake step. It works in the office.\",\n    \"closedAt\": null,\n    \"comments\": []\n  }\n}"
+            },
+            {
+              "name": "Employee attempting it",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "tickets",
+                    "{{ticketId}}"
+                  ]
+                },
+                "description": "Agents and admins only.\n\nSend `\"assigneeId\": null` to put it back in the queue. Leaving the field out means do not touch the assignment.\n\nOnly active agents can be assigned; anyone else is rejected with 422.\n\nThe person who raised the ticket is emailed when someone picks it up. Handing it back to the queue sends nothing.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"assigneeId\": \"{{userId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": {\n    \"code\": \"FORBIDDEN\",\n    \"message\": \"Not permitted to ticket:triage.\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Change status or priority",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{ticketId}}"
+              ]
+            },
+            "description": "Agents and admins only. Can be combined with an assignment in the same request.\n\nAllowed moves: open to in_progress, resolved or closed. in_progress to resolved or closed. resolved back to in_progress, or to closed. Closed is final.\n\nAnything else returns 409. Changing the priority moves the deadline with it.\n\nThe person who raised the ticket is emailed when the status changes. Nobody is emailed about their own action.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\",\n  \"priority\": \"urgent\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "Updated",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "tickets",
+                    "{{ticketId}}"
+                  ]
+                },
+                "description": "Agents and admins only. Can be combined with an assignment in the same request.\n\nAllowed moves: open to in_progress, resolved or closed. in_progress to resolved or closed. resolved back to in_progress, or to closed. Closed is final.\n\nAnything else returns 409. Changing the priority moves the deadline with it.\n\nThe person who raised the ticket is emailed when the status changes. Nobody is emailed about their own action.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"in_progress\",\n  \"priority\": \"urgent\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"id\": \"01m1sbyd4m4xbgpe2kq43dcemg\",\n    \"subject\": \"VPN will not connect from home\",\n    \"status\": \"in_progress\",\n    \"priority\": \"urgent\",\n    \"category\": {\n      \"id\": \"01m1sbqvfsjr4hx0a3bz7exant\",\n      \"slug\": \"hr-payroll\",\n      \"name\": \"HR - Payroll\"\n    },\n    \"requester\": {\n      \"id\": \"01m1sbqw8e6ypgq808883zzqe4\",\n      \"name\": \"Jordan Employee\"\n    },\n    \"assignee\": {\n      \"id\": \"01m1sbqvwfjw0ratxbgj62e2be\",\n      \"name\": \"Sam Support\"\n    },\n    \"dueAt\": \"2026-09-05T22:05:28+00:00\",\n    \"isOverdue\": false,\n    \"resolvedAt\": null,\n    \"commentCount\": 0,\n    \"createdAt\": \"2026-09-05T18:05:28+00:00\",\n    \"updatedAt\": \"2026-09-05T18:05:28+00:00\",\n    \"description\": \"The connection fails during the handshake step. It works in the office.\",\n    \"closedAt\": null,\n    \"comments\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reply to a ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{ticketId}}",
+                "comments"
+              ]
+            },
+            "description": "The requester and any agent can reply. Closed tickets take no more replies (409).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Thanks for raising this, taking a look now.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "Reply added",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/tickets/{{ticketId}}/comments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "tickets",
+                    "{{ticketId}}",
+                    "comments"
+                  ]
+                },
+                "description": "The requester and any agent can reply. Closed tickets take no more replies (409).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"body\": \"Thanks for raising this, taking a look now.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"id\": \"01m1sbydb4523pgn77q2j0s4t1\",\n    \"body\": \"Thanks for raising this, taking a look now.\",\n    \"author\": {\n      \"id\": \"01m1sbqvwfjw0ratxbgj62e2be\",\n      \"name\": \"Sam Support\",\n      \"role\": \"moderator\"\n    },\n    \"createdAt\": \"2026-09-05T18:05:28+00:00\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete a ticket",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tickets",
+                "{{ticketId}}"
+              ]
+            },
+            "description": "Admins only. The row is kept so the history still makes sense, but it disappears from every list and returns 404 afterwards.\n\nAgents close tickets by status instead."
+          },
+          "response": [
+            {
+              "name": "Deleted, no body",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/tickets/{{ticketId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "tickets",
+                    "{{ticketId}}"
+                  ]
+                },
+                "description": "Admins only. The row is kept so the history still makes sense, but it disappears from every list and returns 404 afterwards.\n\nAgents close tickets by status instead."
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "text",
+              "header": [],
+              "cookie": [],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories?",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories"
+              ],
+              "query": [
+                {
+                  "key": "includeRetired",
+                  "value": "1",
+                  "disabled": true,
+                  "description": "Admins only"
+                }
+              ]
+            },
+            "description": "Active categories, for the new-ticket form. Add `includeRetired=1` to see retired ones too; that needs admin."
+          },
+          "response": [
+            {
+              "name": "Active categories",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/categories?",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "categories"
+                  ],
+                  "query": [
+                    {
+                      "key": "includeRetired",
+                      "value": "1",
+                      "disabled": true,
+                      "description": "Admins only"
+                    }
+                  ]
+                },
+                "description": "Active categories, for the new-ticket form. Add `includeRetired=1` to see retired ones too; that needs admin."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"01m1sbqvfsjr4hx0a3bz7exant\",\n      \"slug\": \"hr-payroll\",\n      \"name\": \"HR - Payroll\",\n      \"isActive\": true\n    },\n    {\n      \"id\": \"01m1sbqvfsjr4hx0a3bz7exans\",\n      \"slug\": \"it-access\",\n      \"name\": \"IT - Access & VPN\",\n      \"isActive\": true\n    },\n    {\n      \"id\": \"01m1sbqvfsjr4hx0a3bz7exanr\",\n      \"slug\": \"it-hardware\",\n      \"name\": \"IT - Hardware\",\n      \"isActive\": true\n    }\n  ]\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const rows = pm.response.json().data;",
+                  "    if (rows.length) { pm.collectionVariables.set('categoryId', rows[0].id); }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create a category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories"
+              ]
+            },
+            "description": "Admins only. The slug is worked out from the name unless you supply one, and never changes afterwards.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"IT - Mobile Devices\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/categories",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "categories"
+                  ]
+                },
+                "description": "Admins only. The slug is worked out from the name unless you supply one, and never changes afterwards.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"IT - Mobile Devices\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"id\": \"01m1sbyddh4bx0jfzdxr63pfze\",\n    \"slug\": \"it-mobile-devices\",\n    \"name\": \"IT - Mobile Devices\",\n    \"isActive\": true\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Rename or retire a category",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories",
+                "{{categoryId}}"
+              ]
+            },
+            "description": "Admins only.\n\nRenaming leaves the slug alone, so saved filter links keep working. Retiring hides it from new tickets but keeps existing ones and keeps it filterable.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"IT - Phones\",\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "Renamed and retired",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/categories/{{categoryId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "categories",
+                    "{{categoryId}}"
+                  ]
+                },
+                "description": "Admins only.\n\nRenaming leaves the slug alone, so saved filter links keep working. Retiring hides it from new tickets but keeps existing ones and keeps it filterable.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"IT - Phones\",\n  \"isActive\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"id\": \"01m1sbyddh4bx0jfzdxr63pfze\",\n    \"slug\": \"it-mobile-devices\",\n    \"name\": \"IT - Phones\",\n    \"isActive\": false\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Accounts",
+      "item": [
+        {
+          "name": "List accounts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "role",
+                  "value": "moderator",
+                  "disabled": true,
+                  "description": "user, moderator, admin"
+                },
+                {
+                  "key": "isActive",
+                  "value": "true",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "search",
+                  "value": "sam",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Admins only. Paged, and filterable by role, active state, or a name and email search."
+          },
+          "response": [
+            {
+              "name": "A page of accounts",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users?page=1&limit=20",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "disabled": false,
+                      "description": ""
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20",
+                      "disabled": false,
+                      "description": ""
+                    },
+                    {
+                      "key": "role",
+                      "value": "moderator",
+                      "disabled": true,
+                      "description": "user, moderator, admin"
+                    },
+                    {
+                      "key": "isActive",
+                      "value": "true",
+                      "disabled": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "search",
+                      "value": "sam",
+                      "disabled": true,
+                      "description": ""
+                    }
+                  ]
+                },
+                "description": "Admins only. Paged, and filterable by role, active state, or a name and email search."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"01m1sbqvpe6v7p6jjf58hnfne2\",\n      \"name\": \"Amina Admin\",\n      \"email\": \"admin@example.com\",\n      \"role\": \"admin\",\n      \"isActive\": true,\n      \"createdAt\": \"2026-09-05T18:01:54+00:00\",\n      \"lastLoginAt\": \"2026-09-05T18:05:27+00:00\"\n    },\n    {\n      \"id\": \"01m1sbqx1ynyajkqjamxs2vheb\",\n      \"name\": \"Dana Former\",\n      \"email\": \"dana@example.com\",\n      \"role\": \"user\",\n      \"isActive\": false,\n      \"createdAt\": \"2026-09-05T18:01:55+00:00\",\n      \"lastLoginAt\": null\n    }\n  ],\n  \"pagination\": {\n    \"page\": 1,\n    \"limit\": 2,\n    \"totalItems\": 8,\n    \"totalPages\": 4\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const rows = pm.response.json().data;",
+                  "    if (rows.length) { pm.collectionVariables.set('userId', rows[0].id); }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List assignable agents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/assignable",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "assignable"
+              ]
+            },
+            "description": "Active agents, names only. This is what fills the assignee dropdown.\n\nSeparate from the account list on purpose: an agent needs the names, not everyone's email address."
+          },
+          "response": [
+            {
+              "name": "Active agents",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/assignable",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "assignable"
+                  ]
+                },
+                "description": "Active agents, names only. This is what fills the assignee dropdown.\n\nSeparate from the account list on purpose: an agent needs the names, not everyone's email address."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"01m1sbqvpe6v7p6jjf58hnfne2\",\n      \"name\": \"Amina Admin\",\n      \"role\": \"admin\"\n    },\n    {\n      \"id\": \"01m1sbqw2ewmhrha27pg24gbsy\",\n      \"name\": \"Priya Agent\",\n      \"role\": \"moderator\"\n    },\n    {\n      \"id\": \"01m1sbqvwfjw0ratxbgj62e2be\",\n      \"name\": \"Sam Support\",\n      \"role\": \"moderator\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "List roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ]
+            },
+            "description": "Admins only. The options behind the role dropdown on the account screens.\n\nNeeded because role ids are generated when the database is seeded, so they differ between installations and cannot be written into the frontend."
+          },
+          "response": [
+            {
+              "name": "The three roles",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/roles",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "roles"
+                  ]
+                },
+                "description": "Admins only. The options behind the role dropdown on the account screens.\n\nNeeded because role ids are generated when the database is seeded, so they differ between installations and cannot be written into the frontend."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"01m1sbqvf33jhfk3193prvnty7\",\n      \"slug\": \"user\",\n      \"name\": \"Employee\",\n      \"description\": \"Raises tickets and follows their own.\"\n    },\n    {\n      \"id\": \"01m1sbqvf67z2pdpcer8gr5zdx\",\n      \"slug\": \"moderator\",\n      \"name\": \"Support Agent\",\n      \"description\": \"Works the shared queue and resolves tickets.\"\n    },\n    {\n      \"id\": \"01m1sbqvf7hb0sxsmqnznj6tg4\",\n      \"slug\": \"admin\",\n      \"name\": \"Support Manager\",\n      \"description\": \"Manages accounts, categories and metrics.\"\n    }\n  ]\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const roles = pm.response.json().data;",
+                  "    const user = roles.find(r => r.slug === 'user');",
+                  "    if (user) { pm.collectionVariables.set('roleId', user.id); }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create an account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Admins only. Passwords must be at least 10 characters with letters and numbers.\n\nGet a role id from `List roles` below.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Agent\",\n  \"email\": \"new.agent@example.com\",\n  \"password\": \"Sufficient1Password\",\n  \"roleId\": \"{{roleId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users"
+                  ]
+                },
+                "description": "Admins only. Passwords must be at least 10 characters with letters and numbers.\n\nGet a role id from `List roles` below.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"New Agent\",\n  \"email\": \"new.agent@example.com\",\n  \"password\": \"Sufficient1Password\",\n  \"roleId\": \"{{roleId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"id\": \"01m1sbydp6154j1zg6yck5jw3b\",\n    \"name\": \"New Agent\",\n    \"email\": \"new.agent@example.com\",\n    \"role\": \"user\",\n    \"isActive\": true,\n    \"createdAt\": \"2026-09-05T18:05:29+00:00\",\n    \"lastLoginAt\": null\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update an account",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Admins only. Send any combination of name, email, role and active state.\n\nChanging the role or deactivating signs the person out of every device on their next request. Correcting a name or email does not, because neither grants anything.\n\nTwo things are refused with 409, because either would lock the system: changing your own role or deactivating yourself, and removing the last active admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jordan Employee\",\n  \"email\": \"jordan@example.com\",\n  \"roleId\": \"{{roleId}}\",\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "Updated",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{userId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{userId}}"
+                  ]
+                },
+                "description": "Admins only. Send any combination of name, email, role and active state.\n\nChanging the role or deactivating signs the person out of every device on their next request. Correcting a name or email does not, because neither grants anything.\n\nTwo things are refused with 409, because either would lock the system: changing your own role or deactivating yourself, and removing the last active admin.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Jordan Employee\",\n  \"email\": \"jordan@example.com\",\n  \"roleId\": \"{{roleId}}\",\n  \"isActive\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"id\": \"01m1sbydp6154j1zg6yck5jw3b\",\n    \"name\": \"New Agent Renamed\",\n    \"email\": \"renamed.agent@example.com\",\n    \"role\": \"user\",\n    \"isActive\": false,\n    \"createdAt\": \"2026-09-05T18:05:29+00:00\",\n    \"lastLoginAt\": null\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Metrics",
+      "item": [
+        {
+          "name": "Dashboard metrics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/metrics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "metrics"
+              ]
+            },
+            "description": "Admins only. Tickets by status, tickets by category, average hours to resolve, and overall totals.\n\nEmpty buckets are reported as zero rather than left out. Average resolution is null when nothing has been resolved yet."
+          },
+          "response": [
+            {
+              "name": "Metrics",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/metrics",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "metrics"
+                  ]
+                },
+                "description": "Admins only. Tickets by status, tickets by category, average hours to resolve, and overall totals.\n\nEmpty buckets are reported as zero rather than left out. Average resolution is null when nothing has been resolved yet."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"byStatus\": {\n      \"open\": 67,\n      \"in_progress\": 55,\n      \"resolved\": 44,\n      \"closed\": 29\n    },\n    \"byCategory\": [\n      {\n        \"slug\": \"it-hardware\",\n        \"name\": \"IT - Hardware\",\n        \"total\": 67\n      },\n      {\n        \"slug\": \"it-access\",\n        \"name\": \"IT - Access & VPN\",\n        \"total\": 66\n      },\n      {\n        \"slug\": \"hr-payroll\",\n        \"name\": \"HR - Payroll\",\n        \"total\": 62\n      },\n      {\n        \"slug\": \"it-mobile-devices\",\n        \"name\": \"IT - Phones\",\n        \"total\": 0\n      }\n    ],\n    \"averageResolutionHours\": 78.4,\n    \"totals\": {\n      \"tickets\": 195,\n      \"unresolved\": 122,\n      \"overdue\": 19,\n      \"unassigned\": 45\n    }\n  }\n}"
+            },
+            {
+              "name": "Agent attempting it",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/metrics",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "metrics"
+                  ]
+                },
+                "description": "Admins only. Tickets by status, tickets by category, average hours to resolve, and overall totals.\n\nEmpty buckets are reported as zero rather than left out. Average resolution is null when nothing has been resolved yet."
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": {\n    \"code\": \"FORBIDDEN\",\n    \"message\": \"Not permitted to metrics:read.\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

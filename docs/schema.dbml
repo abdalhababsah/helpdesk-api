@@ -185,6 +185,29 @@ Table refresh_tokens {
   Note: 'Refresh tokens are stateful and revocable. Access tokens are 10-minute JWTs and are never stored. Rotation with reuse detection: presenting an already-rotated token revokes every token in its family.'
 }
 
+//  AUDIT
+
+Table action_logs {
+  id char(26) [pk, note: 'ULID']
+  action varchar(64) [not null, note: 'Matches the ActionType enum. A string rather than a MySQL enum so adding a case needs no migration, and a row naming a retired action stays readable.']
+  actor_id char(26) [note: 'Null for events with no authenticated actor, such as a failed login or console work. SET NULL, so the record of what happened outlives the account that did it.']
+  subject_type varchar(64) [note: 'Morph map key, not a class name, so renaming a class does not orphan its history.']
+  subject_id char(26) [note: 'Deliberately unconstrained. A foreign key would block the very delete the entry is recording.']
+  properties json [note: 'Before and after values for what changed. Never credentials or token values.']
+  ip_address varchar(45)
+  user_agent varchar(255)
+  created_at datetime(3) [not null]
+
+  indexes {
+    (actor_id, created_at) [name: 'idx_action_logs_actor', note: 'Everything one account did']
+    (subject_type, subject_id, created_at) [name: 'idx_action_logs_subject', note: 'The timeline of one ticket']
+    (action, created_at) [name: 'idx_action_logs_action', note: 'Filtering the feed, and the pruning sweep']
+    (created_at) [name: 'idx_action_logs_created']
+  }
+
+  Note: 'Written in the same transaction as the change it describes, so a rolled-back change takes its entry with it. Failures are recorded too: a refused authorization and a replayed refresh token are the most useful rows here.'
+}
+
 //  RELATIONSHIPS
 
 Ref: role_permissions.role_id > roles.id [delete: cascade, update: cascade]
@@ -197,3 +220,4 @@ Ref: ticket_comments.ticket_id > tickets.id [delete: cascade, update: cascade]
 Ref: ticket_comments.author_id > users.id [delete: restrict, update: cascade]
 Ref: refresh_tokens.user_id > users.id [delete: cascade, update: cascade]
 Ref: refresh_tokens.id - refresh_tokens.replaced_by_id [delete: set null, update: cascade]
+Ref: action_logs.actor_id > users.id [delete: set null, update: cascade]
