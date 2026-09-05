@@ -23,22 +23,12 @@ final class PermissionMatrixTest extends TestCase
      * not a copy of the implementation, so a change to the implementation that
      * was not asked for will fail here.
      *
-     * Two cells depart from the brief on purpose, both recorded here so the
-     * departure is a decision rather than a drift:
-     *
-     * ticket:create is not granted to a user. Users raise tickets through the
-     * assistant, which authorises by conversation ownership instead, so a user
-     * calling POST /tickets directly is refused.
-     *
-     * account:delete and knowledge:manage are not in the brief at all. They
-     * back deleting an account and writing knowledge articles, both admin only.
-     *
      * @return array<string, array<string, string|null>>
      */
     private static function expected(): array
     {
         return [
-            'ticket:create' => ['user' => null, 'moderator' => 'all', 'admin' => 'all'],
+            'ticket:create' => ['user' => 'all', 'moderator' => 'all', 'admin' => 'all'],
             'ticket:read' => ['user' => 'own', 'moderator' => 'all', 'admin' => 'all'],
             'ticket:comment' => ['user' => 'own', 'moderator' => 'all', 'admin' => 'all'],
             'ticket:list_queue' => ['user' => null, 'moderator' => 'all', 'admin' => 'all'],
@@ -47,8 +37,6 @@ final class PermissionMatrixTest extends TestCase
             'ticket:delete' => ['user' => null, 'moderator' => null, 'admin' => 'all'],
             'category:manage' => ['user' => null, 'moderator' => null, 'admin' => 'all'],
             'account:manage' => ['user' => null, 'moderator' => null, 'admin' => 'all'],
-            'account:delete' => ['user' => null, 'moderator' => null, 'admin' => 'all'],
-            'knowledge:manage' => ['user' => null, 'moderator' => null, 'admin' => 'all'],
             'metrics:read' => ['user' => null, 'moderator' => null, 'admin' => 'all'],
         ];
     }

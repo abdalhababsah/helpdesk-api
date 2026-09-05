@@ -34,7 +34,6 @@ final class PermissionMatrix
             PermissionSlug::CategoryManage->value => 'Create and retire categories',
             PermissionSlug::AccountManage->value => 'Create, deactivate and re-role accounts',
             PermissionSlug::AccountDelete->value => 'Delete an account',
-            PermissionSlug::KnowledgeManage->value => 'Write and retire knowledge articles',
             PermissionSlug::MetricsRead->value => 'View metrics across every user',
         ];
     }
@@ -49,9 +48,8 @@ final class PermissionMatrix
     public static function grants(): array
     {
         return [
-            // No ticket:create. A user raises tickets through the assistant,
-            // which authorises by conversation ownership rather than a grant.
             RoleSlug::User->value => [
+                PermissionSlug::TicketCreate->value => PermissionScope::All,
                 PermissionSlug::TicketRead->value => PermissionScope::Own,
                 PermissionSlug::TicketComment->value => PermissionScope::Own,
             ],
@@ -74,7 +72,6 @@ final class PermissionMatrix
                 PermissionSlug::CategoryManage->value => PermissionScope::All,
                 PermissionSlug::AccountManage->value => PermissionScope::All,
                 PermissionSlug::AccountDelete->value => PermissionScope::All,
-                PermissionSlug::KnowledgeManage->value => PermissionScope::All,
                 PermissionSlug::MetricsRead->value => PermissionScope::All,
             ],
         ];

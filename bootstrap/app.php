@@ -3,10 +3,8 @@
 use App\Authorization\Actor;
 use App\Authorization\AuthorizationDenied;
 use App\Exceptions\AccountInactive;
-use App\Exceptions\AssistantUnavailable;
 use App\Exceptions\AuthFailure;
 use App\Exceptions\CannotModifyOwnAccount;
-use App\Exceptions\ConversationClosed;
 use App\Exceptions\InvalidAssignee;
 use App\Exceptions\InvalidStatusTransition;
 use App\Exceptions\LastAdminProtected;
@@ -14,7 +12,6 @@ use App\Exceptions\PasswordResetInvalid;
 use App\Exceptions\TicketIsClosed;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\Authenticate;
-use App\Http\Middleware\AuthenticateIfPresent;
 use App\Http\Middleware\VerifyRefreshOrigin;
 use App\Support\DenialRecorder;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -45,7 +42,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'auth.jwt' => Authenticate::class,
-            'auth.optional' => AuthenticateIfPresent::class,
             'origin.refresh' => VerifyRefreshOrigin::class,
         ]);
     })
@@ -80,14 +76,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Well-formed request, permitted actor, wrong state. That is a conflict
         // rather than a validation failure.
-        foreach ([InvalidStatusTransition::class, TicketIsClosed::class, CannotModifyOwnAccount::class, LastAdminProtected::class, AccountInactive::class, ConversationClosed::class] as $conflict) {
+        foreach ([InvalidStatusTransition::class, TicketIsClosed::class, CannotModifyOwnAccount::class, LastAdminProtected::class, AccountInactive::class] as $conflict) {
             $exceptions->render(fn (Throwable $e) => $e instanceof $conflict ? $error('CONFLICT', $e->getMessage(), 409) : null);
         }
 
         $exceptions->render(fn (PasswordResetInvalid $e) => $error('RESET_LINK_INVALID', $e->getMessage(), 400));
-
-        // The provider is a dependency of ours, not a mistake of theirs.
-        $exceptions->render(fn (AssistantUnavailable $e) => $error('ASSISTANT_UNAVAILABLE', $e->getMessage(), 502));
 
         $exceptions->render(fn (InvalidAssignee $e) => $error('INVALID_ASSIGNEE', $e->getMessage(), 422));
 

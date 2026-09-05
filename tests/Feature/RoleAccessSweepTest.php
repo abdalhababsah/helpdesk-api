@@ -2,15 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\AssistantGuest;
-use App\Models\AssistantSession;
 use App\Models\Category;
-use App\Models\KnowledgeArticle;
 use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -81,12 +77,6 @@ final class RoleAccessSweepTest extends TestCase
         $category = fn (): Category => Category::factory()->create();
         $agentId = fn (): string => (string) User::whereRelation('role', 'slug', 'moderator')->value('id');
         $userRoleId = fn (): string => (string) Role::where('slug', 'user')->value('id');
-        $otherSession = fn (): AssistantSession => AssistantSession::create([
-            'conversation_id' => (string) Str::uuid7(),
-            'participant_type' => 'assistant_guest',
-            'participant_id' => AssistantGuest::create(['last_seen_at' => now()])->id,
-            'last_activity_at' => now(),
-        ]);
 
         return [
             'GET /tickets' => [
@@ -103,7 +93,7 @@ final class RoleAccessSweepTest extends TestCase
                     'description' => 'A description that is long enough.',
                     'categoryId' => $category()->id,
                 ]],
-                'expect' => ['anonymous' => 401, 'user' => 403, 'moderator' => 201, 'admin' => 201],
+                'expect' => ['anonymous' => 401, 'user' => 201, 'moderator' => 201, 'admin' => 201],
             ],
             'GET /tickets/{own}' => [
                 'request' => fn () => ['GET', '/api/tickets/'.$ownTicket()->id, []],
@@ -185,52 +175,6 @@ final class RoleAccessSweepTest extends TestCase
             'POST /users/{id}/password-reset' => [
                 'request' => fn () => ['POST', '/api/users/'.User::factory()->create()->id.'/password-reset', []],
                 'expect' => ['anonymous' => 401, 'user' => 403, 'moderator' => 403, 'admin' => 202],
-            ],
-            // The assistant routes accept guests, so an anonymous caller is
-            // refused for not owning the conversation rather than for not
-            // being signed in.
-            'POST /assistant/conversations' => [
-                'request' => fn () => ['POST', '/api/assistant/conversations', []],
-                'expect' => ['anonymous' => 201, 'user' => 201, 'moderator' => 201, 'admin' => 201],
-            ],
-            'GET /assistant/conversations/{someone else\'s}' => [
-                'request' => fn () => ['GET', '/api/assistant/conversations/'.$otherSession()->id, []],
-                'expect' => ['anonymous' => 403, 'user' => 403, 'moderator' => 403, 'admin' => 200],
-            ],
-            'POST /assistant/conversations/{someone else\'s}/messages' => [
-                'request' => fn () => ['POST', '/api/assistant/conversations/'.$otherSession()->id.'/messages', ['message' => 'hello']],
-                'expect' => ['anonymous' => 403, 'user' => 403, 'moderator' => 403, 'admin' => 403],
-            ],
-            'POST /assistant/conversations/{someone else\'s}/tickets' => [
-                'request' => fn () => ['POST', '/api/assistant/conversations/'.$otherSession()->id.'/tickets', [
-                    'subject' => 'A subject long enough',
-                    'description' => 'A description that is long enough.',
-                    'categoryId' => $category()->id,
-                ]],
-                'expect' => ['anonymous' => 403, 'user' => 403, 'moderator' => 403, 'admin' => 403],
-            ],
-            'POST /assistant/conversations/{someone else\'s}/claim' => [
-                'request' => fn () => ['POST', '/api/assistant/conversations/'.$otherSession()->id.'/claim', []],
-                'expect' => ['anonymous' => 403, 'user' => 403, 'moderator' => 403, 'admin' => 403],
-            ],
-            'GET /assistant/conversations' => [
-                'request' => fn () => ['GET', '/api/assistant/conversations', []],
-                'expect' => ['anonymous' => 401, 'user' => 403, 'moderator' => 403, 'admin' => 200],
-            ],
-            'GET /knowledge' => [
-                'request' => fn () => ['GET', '/api/knowledge', []],
-                'expect' => ['anonymous' => 401, 'user' => 403, 'moderator' => 403, 'admin' => 200],
-            ],
-            'POST /knowledge' => [
-                'request' => fn (string $role) => ['POST', '/api/knowledge', [
-                    'title' => "Article for {$role}",
-                    'body' => 'A body that is long enough to pass validation.',
-                ]],
-                'expect' => ['anonymous' => 401, 'user' => 403, 'moderator' => 403, 'admin' => 201],
-            ],
-            'PATCH /knowledge/{id}' => [
-                'request' => fn () => ['PATCH', '/api/knowledge/'.KnowledgeArticle::factory()->create()->id, ['title' => 'Renamed article']],
-                'expect' => ['anonymous' => 401, 'user' => 403, 'moderator' => 403, 'admin' => 200],
             ],
             'GET /metrics' => [
                 'request' => fn () => ['GET', '/api/metrics', []],

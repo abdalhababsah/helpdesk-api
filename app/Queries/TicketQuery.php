@@ -9,10 +9,8 @@ use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Models\Category;
 use App\Models\Ticket;
-use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Composes the ticket list.
@@ -43,26 +41,6 @@ final class TicketQuery
             PermissionScope::Own => $query->where('requester_id', $actor->id()),
             PermissionScope::All => $query,
         };
-    }
-
-    /**
-     * The person's own unfinished tickets that read like the given text.
-     *
-     * Lives here rather than in the caller so that matching a ticket by words
-     * uses the same rules everywhere, including the fallback for terms the
-     * fulltext index is too coarse to hold.
-     *
-     * @return Collection<int, Ticket>
-     */
-    public function ownOpenMatching(User $user, string $term, int $limit = 3): Collection
-    {
-        $query = Ticket::query()
-            ->where('requester_id', $user->getKey())
-            ->whereIn('status', array_map(fn (TicketStatus $status): string => $status->value, TicketStatus::open()));
-
-        $this->applySearch($query, $term);
-
-        return $query->orderByDesc('created_at')->limit($limit)->get(['id', 'subject', 'status', 'created_at']);
     }
 
     /**

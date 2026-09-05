@@ -43,7 +43,7 @@ final class TicketWriteTest extends TestCase
 
     public function test_creating_a_ticket_records_the_caller_as_the_requester(): void
     {
-        $response = $this->asUser($this->agentToken)->postJson('/api/tickets', [
+        $response = $this->asUser($this->userToken)->postJson('/api/tickets', [
             'subject' => 'VPN will not connect',
             'description' => 'It fails during the handshake step.',
             'categoryId' => $this->category->id,
@@ -52,7 +52,7 @@ final class TicketWriteTest extends TestCase
 
         // Raising a ticket for someone else would make the "own" scope
         // meaningless, so the requester is never taken from the request body.
-        $this->assertSame($this->agent->id, $response->json('data.requester.id'));
+        $this->assertSame($this->requester->id, $response->json('data.requester.id'));
         $this->assertSame('open', $response->json('data.status'));
         $this->assertNull($response->json('data.assignee'));
 
@@ -64,7 +64,7 @@ final class TicketWriteTest extends TestCase
     {
         $retired = Category::factory()->retired()->create();
 
-        $this->asUser($this->agentToken)->postJson('/api/tickets', [
+        $this->asUser($this->userToken)->postJson('/api/tickets', [
             'subject' => 'Something is broken',
             'description' => 'A description that is long enough.',
             'categoryId' => $retired->id,
@@ -73,7 +73,7 @@ final class TicketWriteTest extends TestCase
 
     public function test_creation_reports_which_field_failed(): void
     {
-        $this->asUser($this->agentToken)->postJson('/api/tickets', [
+        $this->asUser($this->userToken)->postJson('/api/tickets', [
             'subject' => 'Hi',
             'description' => 'short',
             'categoryId' => $this->category->id,

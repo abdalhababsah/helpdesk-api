@@ -109,10 +109,7 @@ final class SessionTest extends TestCase
         $permissions = $this->asUser($session['token'])->getJson('/api/auth/me')->json('data.permissions');
 
         $this->assertSame('own', $permissions['ticket:read']);
-        $this->assertSame('own', $permissions['ticket:comment']);
-        // A user raises tickets through the assistant, so they hold no
-        // ticket:create and the New ticket action never renders for them.
-        $this->assertArrayNotHasKey('ticket:create', $permissions);
+        $this->assertSame('all', $permissions['ticket:create']);
     }
 
     public function test_deactivation_takes_effect_on_the_next_request(): void

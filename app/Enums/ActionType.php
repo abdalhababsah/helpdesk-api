@@ -43,13 +43,6 @@ enum ActionType: string
     case AccountReactivated = 'account.reactivated';
     case AccountDeleted = 'account.deleted';
 
-    case ConversationClaimed = 'assistant.conversation_claimed';
-
-    case ArticleCreated = 'knowledge.created';
-    case ArticleUpdated = 'knowledge.updated';
-    case ArticleRetired = 'knowledge.retired';
-    case ArticleRestored = 'knowledge.restored';
-
     case PasswordResetRequested = 'password.reset_requested';
     case PasswordResetSent = 'password.reset_sent';
     case PasswordChanged = 'password.changed';

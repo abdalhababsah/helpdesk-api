@@ -2,9 +2,7 @@
 
 namespace App\Queries;
 
-use App\Enums\AssistantOutcome;
 use App\Enums\TicketStatus;
-use App\Models\AssistantSession;
 use App\Models\Ticket;
 use Illuminate\Support\Facades\DB;
 
@@ -24,7 +22,6 @@ final class MetricsQuery
             'byCategory' => $this->byCategory(),
             'averageResolutionHours' => $this->averageResolutionHours(),
             'totals' => $this->totals(),
-            'assistant' => $this->assistant(),
         ];
     }
 
@@ -108,37 +105,6 @@ final class MetricsQuery
             'unresolved' => (int) ($row->unresolved ?? 0),
             'overdue' => (int) ($row->overdue ?? 0),
             'unassigned' => (int) ($row->unassigned ?? 0),
-        ];
-    }
-
-    /**
-     * The assistant over the last 30 days.
-     *
-     * Deflection is answered over settled rather than over all conversations,
-     * so a day of open conversations does not read as a drop in usefulness.
-     *
-     * @return array{conversations: int, answered: int, ticketsRaised: int, deflectionRate: float|null}
-     */
-    private function assistant(): array
-    {
-        $since = now()->subDays(30);
-
-        $counts = AssistantSession::query()
-            ->where('created_at', '>=', $since)
-            ->selectRaw('COUNT(*) AS conversations')
-            ->selectRaw('SUM(outcome = ?) AS answered', [AssistantOutcome::Answered->value])
-            ->selectRaw('SUM(outcome = ?) AS raised', [AssistantOutcome::TicketRaised->value])
-            ->first();
-
-        $answered = (int) ($counts->answered ?? 0);
-        $raised = (int) ($counts->raised ?? 0);
-        $settled = $answered + $raised;
-
-        return [
-            'conversations' => (int) ($counts->conversations ?? 0),
-            'answered' => $answered,
-            'ticketsRaised' => $raised,
-            'deflectionRate' => $settled === 0 ? null : round($answered / $settled, 3),
         ];
     }
 }

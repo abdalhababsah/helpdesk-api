@@ -17,7 +17,6 @@ use App\Http\Resources\TicketDetailResource;
 use App\Http\Resources\TicketResource;
 use App\Models\Ticket;
 use App\Queries\TicketQuery;
-use App\Support\AssistantTranscript;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -56,7 +55,7 @@ final class TicketController extends Controller
         // existence discloses nothing that could be enumerated.
         $actor->authorize(PermissionSlug::TicketRead, $ticket);
 
-        return response()->json(['data' => new TicketDetailResource($this->withTranscript($this->loadDetail($ticket), $actor))]);
+        return response()->json(['data' => new TicketDetailResource($this->loadDetail($ticket))]);
     }
 
     public function store(TicketStoreRequest $request, Actor $actor, CreateTicket $create): JsonResponse
@@ -110,20 +109,6 @@ final class TicketController extends Controller
         $delete->handle($actor, $ticket);
 
         return response()->json(null, 204);
-    }
-
-    /**
-     * The conversation that produced the ticket, for the people who have to
-     * act on it. Set as an attribute rather than passed alongside so it lands
-     * inside the resource rather than beside it.
-     */
-    private function withTranscript(Ticket $ticket, Actor $actor): Ticket
-    {
-        if ($ticket->conversation_id === null || ! $actor->can(PermissionSlug::TicketListQueue)) {
-            return $ticket;
-        }
-
-        return $ticket->setAttribute('transcript', app(AssistantTranscript::class)->for($ticket->conversation_id)->all());
     }
 
     private function loadDetail(Ticket $ticket): Ticket
