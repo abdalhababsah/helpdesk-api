@@ -176,17 +176,35 @@ final class TicketQuery
             return;
         }
 
+        // Cleaned first, then measured. Measuring the raw token would let
+        // "vp*" through as three characters, strip the star, and search for a
+        // two-letter term the index does not hold, producing the silent empty
+        // result the fallback exists to prevent.
+        $cleaned = $this->stripOperators($tokens);
         $minimum = (int) config('tickets.search.min_token_size');
-        $indexable = array_filter($tokens, fn (string $token): bool => mb_strlen($token) >= $minimum);
 
-        if (count($indexable) === count($tokens)) {
-            $query->whereFullText(['subject', 'description'], $this->booleanExpression($tokens), ['mode' => 'boolean']);
+        // Nothing but operators. There is no term to look for, so nothing
+        // matches; searching for the literal characters would be pretending.
+        if ($cleaned === []) {
+            $query->whereIn('id', []);
 
             return;
         }
 
-        $query->where(function (Builder $outer) use ($tokens): void {
-            foreach ($tokens as $token) {
+        $indexable = count($cleaned) === count($tokens)
+            && array_filter($cleaned, fn (string $token): bool => mb_strlen($token) >= $minimum) === $cleaned;
+
+        if ($indexable) {
+            $expression = implode(' ', array_map(fn (string $token): string => '+'.$token.'*', $cleaned));
+            $query->whereFullText(['subject', 'description'], $expression, ['mode' => 'boolean']);
+
+            return;
+        }
+
+        // The cleaned terms, not the raw input: someone typing vp* means the
+        // prefix, and looking for a literal star would find nothing.
+        $query->where(function (Builder $outer) use ($cleaned): void {
+            foreach ($cleaned as $token) {
                 $like = '%'.addcslashes($token, '%_\\').'%';
 
                 $outer->where(function (Builder $inner) use ($like): void {
@@ -197,14 +215,17 @@ final class TicketQuery
     }
 
     /**
-     * Every term required, each matched as a prefix. Operator characters are
-     * stripped rather than escaped: a user typing a stray bracket means it
-     * literally, and boolean mode would otherwise read it as syntax and either
-     * error or silently change what was asked.
+     * Removes boolean-mode operators rather than escaping them. A user typing a
+     * stray bracket means it literally, and boolean mode would otherwise read
+     * it as syntax and either error or quietly change what was asked for.
+     *
+     * A token that was nothing but operators disappears, which is why the
+     * caller compares the count before and after.
      *
      * @param  list<string>  $tokens
+     * @return list<string>
      */
-    private function booleanExpression(array $tokens): string
+    private function stripOperators(array $tokens): array
     {
         $cleaned = [];
 
@@ -212,11 +233,11 @@ final class TicketQuery
             $safe = preg_replace('/[+\-><()~*"@]+/u', '', $token) ?? '';
 
             if ($safe !== '') {
-                $cleaned[] = '+'.$safe.'*';
+                $cleaned[] = $safe;
             }
         }
 
-        return implode(' ', $cleaned);
+        return $cleaned;
     }
 
     /** @param  Builder<Ticket>  $query */

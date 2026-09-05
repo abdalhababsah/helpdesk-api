@@ -58,7 +58,9 @@ final class ChangeAccountRole
 
     private function wouldRemoveLastAdmin(User $user, RoleSlug $target): bool
     {
-        if ($target === RoleSlug::Admin || $user->role->slug !== RoleSlug::Admin) {
+        // An inactive admin is not one of the administrators who can still act,
+        // so demoting them removes nothing that needs protecting.
+        if ($target === RoleSlug::Admin || $user->role->slug !== RoleSlug::Admin || ! $user->is_active) {
             return false;
         }
 

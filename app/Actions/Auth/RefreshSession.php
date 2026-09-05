@@ -97,6 +97,12 @@ final class RefreshSession
                 'revoked_reason' => RefreshRevokeReason::ReuseDetected->value,
             ]);
 
+        // Refresh rows alone are not the whole session. An access token already
+        // minted from this family stays valid until it expires unless the
+        // version moves, so a replayed token would keep working for minutes
+        // after it was detected.
+        $token->user->increment('token_version');
+
         $this->record(ActionType::TokenReuseDetected, null, $token->user, [
             'family_id' => $token->family_id,
             'presented_token_id' => $token->getKey(),
