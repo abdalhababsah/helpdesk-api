@@ -1,0 +1,199 @@
+Project support_helpdesk {
+  database_type: 'MySQL'
+  Note: 'Internal helpdesk. Employees raise tickets, moderators work a shared queue, admins manage accounts, categories and metrics.'
+}
+
+
+Enum ticket_status {
+  open [note: 'Submitted, not yet picked up']
+  in_progress [note: 'Assignee actively working it']
+  resolved [note: 'Fix delivered']
+  closed [note: 'Terminal. No further comments accepted.']
+}
+
+Enum ticket_priority {
+  low [note: 'SLA 168h']
+  medium [note: 'SLA 72h']
+  high [note: 'SLA 24h']
+  urgent [note: 'SLA 4h']
+}
+
+Enum permission_scope {
+  own [note: 'Granted only for rows the actor owns, i.e. tickets they requested']
+  all [note: 'Granted across every row']
+}
+
+Enum refresh_revoke_reason {
+  rotated [note: 'Normal rotation, superseded by its child']
+  logout [note: 'User logged out of this session']
+  logout_all [note: 'User or admin killed every session']
+  reuse_detected [note: 'Replayed token. Whole family burned.']
+  user_deactivated [note: 'Admin deactivated the account']
+  role_changed [note: 'Admin changed the role']
+  expired [note: 'Swept by the cleanup job']
+}
+
+Table roles {
+  id char(26) [pk, note: 'ULID']
+  slug varchar(32) [not null, unique, note: 'Stable code-facing identifier: user, moderator, admin. Never renamed. The policy layer, the seed and the API serializer all key off this, not the id.']
+  name varchar(64) [not null, note: 'Human label for the admin UI, e.g. "Support Agent"']
+  description varchar(255)
+  is_system boolean [not null, default: true, note: 'System roles cannot be deleted or re-slugged. All three shipped roles are system roles, which keeps the app from being bricked by an admin edit.']
+  created_at datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+  updated_at datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+
+  Note: 'Exactly three rows are seeded: user, moderator, admin. The table exists so grants are data rather than code, not so operators can invent roles at runtime.'
+}
+
+Table permissions {
+  id char(26) [pk, note: 'ULID']
+  slug varchar(64) [not null, unique, note: 'resource:action, e.g. ticket:assign. This is the string the policy layer asks for: can(actor, "ticket:assign", ticket).']
+  resource varchar(32) [not null, note: 'ticket, category, account, metrics. Groups the permission list in the admin UI.']
+  action varchar(32) [not null, note: 'create, read, list_queue, comment, assign, triage, delete, manage']
+  description varchar(255) [note: 'Shown next to the checkbox in the admin UI']
+  created_at datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+
+  indexes {
+    (resource, action) [unique, name: 'uq_permissions_resource_action', note: 'slug is derived from these two, so the pair must be unique as well']
+  }
+
+  Note: 'The permission catalogue is a fixed vocabulary owned by the codebase and reconciled by an idempotent seed. Rows are never created at runtime, because a permission with no enforcement point behind it would be a lie.'
+}
+
+Table role_permissions {
+  role_id char(26) [not null]
+  permission_id char(26) [not null]
+  scope permission_scope [not null, default: 'all', note: 'Resolves the brief matrix cells that read "its requester; any Moderator or Admin". user gets ticket:read at scope own, moderator and admin get it at scope all.']
+  created_at datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+
+  indexes {
+    (role_id, permission_id) [pk, name: 'pk_role_permissions']
+    (permission_id) [name: 'idx_role_permissions_permission', note: 'Reverse lookup: which roles hold this permission']
+  }
+
+  Note: 'The grant matrix. A missing row means denied, so there is no negative-grant row and no precedence rule to reason about. Composite PK makes a duplicate grant unrepresentable.'
+}
+
+//  IDENTITY
+
+Table users {
+  id char(26) [pk, note: 'ULID']
+  name varchar(120) [not null]
+  email varchar(255) [not null, unique, note: 'Stored lower-cased. Case-insensitive via the _ai_ci collation.']
+  password char(60) [not null, note: 'bcrypt digest, cost 12. Never the plaintext, and never selected by the default user query.']
+  role_id char(26) [not null, note: 'Exactly one role per user, per the brief. RESTRICT on delete, so a role in use cannot be removed.']
+  is_active boolean [not null, default: true, note: 'Admin deactivation. Blocks login and every authenticated request.']
+  token_version "int unsigned" [not null, default: 1, note: 'An access token is accepted only when its ver claim equals this. Bumped on deactivate, role change, password change and logout-all. A counter rather than a timestamp because JWT iat has one-second granularity, and a timestamp comparison falsely rejects a token minted in the same second as an invalidation.']
+  last_login_at datetime(3)
+  created_at datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+  updated_at datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+
+  indexes {
+    (role_id, is_active) [name: 'idx_users_role_active', note: 'Assignee picker: active moderators. Also the admin user filter.']
+    (is_active, created_at) [name: 'idx_users_active_created', note: 'Admin account table, default sort']
+  }
+
+  Note: 'One role per user via role_id. A user_roles pivot is the extension point if multi-role is ever needed, but the brief specifies a single role and a pivot would turn every authorization check into a join for no gain.'
+}
+
+//  TAXONOMY
+
+Table categories {
+  id char(26) [pk, note: 'ULID']
+  slug varchar(64) [not null, unique, note: 'URL-safe filter key. GET /api/tickets?category=it-hardware']
+  name varchar(120) [not null, note: 'e.g. "IT - Hardware"']
+  is_active boolean [not null, default: true, note: 'Retire instead of delete. Hidden from the new-ticket form, still filterable historically.']
+  created_at datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+  updated_at datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+
+  indexes {
+    (is_active, name) [name: 'idx_categories_active_name']
+  }
+
+  Note: 'Never hard-deleted. Tickets reference categories with RESTRICT, so history stays intact.'
+}
+
+//  CORE
+
+Table tickets {
+  id char(26) [pk, note: 'ULID. Also the natural creation-order sort key.']
+  subject varchar(200) [not null]
+  description text [not null]
+  status ticket_status [not null, default: 'open']
+  priority ticket_priority [not null, default: 'medium']
+  category_id char(26) [not null, note: 'RESTRICT on delete']
+  requester_id char(26) [not null, note: 'RESTRICT on delete. Never orphan a ticket. Also the row the "own" permission scope tests against.']
+  assignee_id char(26) [note: 'NULL means unassigned. SET NULL on delete. Must be an active moderator or admin: enforced in the service layer, since MySQL cannot express it as an FK.']
+  due_at datetime(3) [not null, note: 'created_at + SLA(priority). Recomputed on priority change. Overdue = due_at < NOW() AND status IN (open, in_progress).']
+  resolved_at datetime(3) [note: 'Stamped on entry to resolved or closed, cleared on reopen. Drives average resolution time.']
+  closed_at datetime(3)
+  deleted_at datetime(3) [note: 'Soft delete, admin only. Every read path filters deleted_at IS NULL.']
+  created_at datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+  updated_at datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+
+  indexes {
+    (requester_id, deleted_at, created_at) [name: 'idx_tickets_requester', note: 'User dashboard and the scope=own read path. Leads with the FK column so MySQL does not add a second single-column index for the constraint.']
+    (category_id, deleted_at, status) [name: 'idx_tickets_category', note: 'Category filter and the tickets-by-category metric. Leads with the FK column.']
+    (assignee_id, deleted_at, status) [name: 'idx_tickets_assignee', note: 'Assigned-to-me and unassigned counts. Leads with the FK column.']
+    (deleted_at, status, created_at) [name: 'idx_tickets_queue', note: 'Moderator queue, the default listing path']
+    (deleted_at, priority, created_at) [name: 'idx_tickets_priority_sort']
+    (deleted_at, status, due_at) [name: 'idx_tickets_overdue', note: 'Overdue strip. A sargable range scan, not a CASE expression.']
+    (deleted_at, status, resolved_at) [name: 'idx_tickets_resolution', note: 'AVG(TIMESTAMPDIFF(...)) metric']
+    (subject, description) [type: fulltext, name: 'ft_tickets_search', note: 'MATCH..AGAINST boolean mode. LIKE fallback below innodb_ft_min_token_size (3).']
+  }
+
+  Note: 'One requester, optional assignee, exactly one category, many comments. Indexes on a foreign key lead with that column so MySQL does not duplicate them; the rest lead with deleted_at, a predicate on every read path.'
+}
+
+Table ticket_comments {
+  id char(26) [pk, note: 'ULID. Sorts chronologically with no secondary index.']
+  ticket_id char(26) [not null, note: 'CASCADE. Comments have no meaning without their ticket.']
+  author_id char(26) [not null, note: 'RESTRICT, to preserve attribution']
+  body text [not null]
+  created_at datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+  updated_at datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+
+  indexes {
+    (ticket_id, created_at) [name: 'idx_comments_thread', note: 'The thread read, in order']
+    (author_id) [name: 'idx_comments_author']
+  }
+
+  Note: 'Deliberately flat, not threaded. No parent_id. The brief states a flat reply history is sufficient, and threading would add recursive reads for no graded value.'
+}
+
+//  SESSION
+
+Table refresh_tokens {
+  id char(26) [pk, note: 'ULID']
+  user_id char(26) [not null, note: 'CASCADE']
+  family_id char(26) [not null, note: 'Constant across a rotation chain. Reuse of any member burns the whole family.']
+  token char(64) [not null, unique, note: 'SHA-256 digest of the issued token. The raw value exists only in the client cookie, so a database leak yields nothing replayable.']
+  replaced_by_id char(26) [unique, note: 'Rotation successor. Unique because a successor replaces exactly one predecessor.']
+  expires_at datetime(3) [not null, note: '30 days']
+  revoked_at datetime(3)
+  revoked_reason refresh_revoke_reason
+  user_agent varchar(255) [note: 'Session list and forensics only']
+  ip_address varchar(45) [note: 'Issuing address. INET6 width.']
+  created_at datetime(3) [not null, default: `CURRENT_TIMESTAMP(3)`]
+
+  indexes {
+    (user_id, revoked_at) [name: 'idx_refresh_user_active', note: 'Revoke-all on deactivate or role change']
+    (family_id) [name: 'idx_refresh_family', note: 'Burn a family on reuse detection']
+    (expires_at) [name: 'idx_refresh_sweep', note: 'Cleanup job']
+  }
+
+  Note: 'Refresh tokens are stateful and revocable. Access tokens are 10-minute JWTs and are never stored. Rotation with reuse detection: presenting an already-rotated token revokes every token in its family.'
+}
+
+//  RELATIONSHIPS
+
+Ref: role_permissions.role_id > roles.id [delete: cascade, update: cascade]
+Ref: role_permissions.permission_id > permissions.id [delete: cascade, update: cascade]
+Ref: users.role_id > roles.id [delete: restrict, update: cascade]
+Ref: tickets.category_id > categories.id [delete: restrict, update: cascade]
+Ref: tickets.requester_id > users.id [delete: restrict, update: cascade]
+Ref: tickets.assignee_id > users.id [delete: set null, update: cascade]
+Ref: ticket_comments.ticket_id > tickets.id [delete: cascade, update: cascade]
+Ref: ticket_comments.author_id > users.id [delete: restrict, update: cascade]
+Ref: refresh_tokens.user_id > users.id [delete: cascade, update: cascade]
+Ref: refresh_tokens.id - refresh_tokens.replaced_by_id [delete: set null, update: cascade]
