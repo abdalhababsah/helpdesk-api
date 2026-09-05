@@ -164,6 +164,18 @@ final class RoleAccessSweepTest extends TestCase
                 'request' => fn () => ['PATCH', '/api/users/'.User::factory()->create()->id, ['isActive' => false]],
                 'expect' => ['anonymous' => 401, 'user' => 403, 'moderator' => 403, 'admin' => 200],
             ],
+            'GET /users/{id}' => [
+                'request' => fn () => ['GET', '/api/users/'.User::factory()->create()->id, []],
+                'expect' => ['anonymous' => 401, 'user' => 403, 'moderator' => 403, 'admin' => 200],
+            ],
+            'DELETE /users/{id}' => [
+                'request' => fn () => ['DELETE', '/api/users/'.User::factory()->create()->id, []],
+                'expect' => ['anonymous' => 401, 'user' => 403, 'moderator' => 403, 'admin' => 204],
+            ],
+            'POST /users/{id}/password-reset' => [
+                'request' => fn () => ['POST', '/api/users/'.User::factory()->create()->id.'/password-reset', []],
+                'expect' => ['anonymous' => 401, 'user' => 403, 'moderator' => 403, 'admin' => 202],
+            ],
             'GET /metrics' => [
                 'request' => fn () => ['GET', '/api/metrics', []],
                 'expect' => ['anonymous' => 401, 'user' => 403, 'moderator' => 403, 'admin' => 200],
