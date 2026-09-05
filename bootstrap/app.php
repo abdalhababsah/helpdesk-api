@@ -2,11 +2,13 @@
 
 use App\Authorization\Actor;
 use App\Authorization\AuthorizationDenied;
+use App\Exceptions\AccountInactive;
 use App\Exceptions\AuthFailure;
 use App\Exceptions\CannotModifyOwnAccount;
 use App\Exceptions\InvalidAssignee;
 use App\Exceptions\InvalidStatusTransition;
 use App\Exceptions\LastAdminProtected;
+use App\Exceptions\PasswordResetInvalid;
 use App\Exceptions\TicketIsClosed;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\Authenticate;
@@ -74,9 +76,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Well-formed request, permitted actor, wrong state. That is a conflict
         // rather than a validation failure.
-        foreach ([InvalidStatusTransition::class, TicketIsClosed::class, CannotModifyOwnAccount::class, LastAdminProtected::class] as $conflict) {
+        foreach ([InvalidStatusTransition::class, TicketIsClosed::class, CannotModifyOwnAccount::class, LastAdminProtected::class, AccountInactive::class] as $conflict) {
             $exceptions->render(fn (Throwable $e) => $e instanceof $conflict ? $error('CONFLICT', $e->getMessage(), 409) : null);
         }
+
+        $exceptions->render(fn (PasswordResetInvalid $e) => $error('RESET_LINK_INVALID', $e->getMessage(), 400));
 
         $exceptions->render(fn (InvalidAssignee $e) => $error('INVALID_ASSIGNEE', $e->getMessage(), 422));
 

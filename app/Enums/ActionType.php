@@ -41,4 +41,9 @@ enum ActionType: string
     case AccountRoleChanged = 'account.role_changed';
     case AccountDeactivated = 'account.deactivated';
     case AccountReactivated = 'account.reactivated';
+    case AccountDeleted = 'account.deleted';
+
+    case PasswordResetRequested = 'password.reset_requested';
+    case PasswordResetSent = 'password.reset_sent';
+    case PasswordChanged = 'password.changed';
 }

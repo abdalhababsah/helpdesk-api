@@ -92,13 +92,13 @@ class Ticket extends Model implements Ownable
     /** @return BelongsTo<User, $this> */
     public function requester(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'requester_id');
+        return $this->belongsTo(User::class, 'requester_id')->withTrashed();
     }
 
     /** @return BelongsTo<User, $this> */
     public function assignee(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assignee_id');
+        return $this->belongsTo(User::class, 'assignee_id')->withTrashed();
     }
 
     /** @return HasMany<TicketComment, $this> */

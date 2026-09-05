@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MetricsController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TicketCommentController;
 use App\Http\Controllers\TicketController;
@@ -15,6 +16,8 @@ Route::prefix('auth')->group(function (): void {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
     Route::post('/refresh', [AuthController::class, 'refresh'])->middleware(['throttle:refresh', 'origin.refresh']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:password-reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:password-reset');
 
     Route::middleware('auth.jwt')->group(function (): void {
         Route::get('/me', [AuthController::class, 'me']);
@@ -43,7 +46,10 @@ Route::middleware('auth.jwt')->group(function (): void {
 
     Route::get('/users', [UserController::class, 'index']);
     Route::post('/users', [UserController::class, 'store']);
+    Route::get('/users/{user}', [UserController::class, 'show']);
     Route::patch('/users/{user}', [UserController::class, 'update']);
+    Route::delete('/users/{user}', [UserController::class, 'destroy']);
+    Route::post('/users/{user}/password-reset', [UserController::class, 'sendPasswordReset']);
 
     Route::get('/metrics', [MetricsController::class, 'index']);
 });

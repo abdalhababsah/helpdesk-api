@@ -16,4 +16,6 @@ enum RefreshRevokeReason: string
     case UserDeactivated = 'user_deactivated';
     case RoleChanged = 'role_changed';
     case Expired = 'expired';
+    case PasswordReset = 'password_reset';
+    case UserDeleted = 'user_deleted';
 }

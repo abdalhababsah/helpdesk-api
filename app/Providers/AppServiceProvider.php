@@ -44,6 +44,12 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         // A well-behaved client refreshes about once every ten minutes.
+        // Tight per address and per account: each request sends an email.
+        RateLimiter::for('password-reset', fn (Request $request) => [
+            Limit::perMinutes(15, 5)->by('reset:email:'.mb_strtolower((string) $request->input('email'))),
+            Limit::perMinutes(15, 10)->by('reset:ip:'.$request->ip()),
+        ]);
+
         RateLimiter::for('refresh', fn (Request $request) => Limit::perMinutes(15, 30)->by('refresh:ip:'.$request->ip()));
 
         Relation::enforceMorphMap([

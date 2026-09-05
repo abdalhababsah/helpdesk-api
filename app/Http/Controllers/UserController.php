@@ -4,15 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Actions\Accounts\ChangeAccountRole;
 use App\Actions\Accounts\CreateAccount;
+use App\Actions\Accounts\DeleteAccount;
 use App\Actions\Accounts\SetAccountActive;
 use App\Actions\Accounts\UpdateAccountDetails;
+use App\Actions\Passwords\SendPasswordReset;
 use App\Authorization\Actor;
 use App\Enums\PermissionSlug;
 use App\Enums\RoleSlug;
+use App\Enums\TicketStatus;
 use App\Http\Requests\UserIndexRequest;
 use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Http\Resources\AssignableUserResource;
+use App\Http\Resources\UserDetailResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -69,6 +73,39 @@ final class UserController extends Controller
         return response()->json(['data' => AssignableUserResource::collection($agents)]);
     }
 
+    public function show(Actor $actor, User $user): JsonResponse
+    {
+        $actor->authorize(PermissionSlug::AccountManage);
+
+        return response()->json(['data' => new UserDetailResource($this->withDetail($user))]);
+    }
+
+    public function destroy(Actor $actor, User $user, DeleteAccount $delete): JsonResponse
+    {
+        $delete->handle($actor, $user);
+
+        return response()->json(null, 204);
+    }
+
+    public function sendPasswordReset(Actor $actor, User $user, SendPasswordReset $send): JsonResponse
+    {
+        $send->handle($actor, $user);
+
+        return response()->json(['data' => ['message' => "A reset link has been emailed to {$user->email}."]], 202);
+    }
+
+    private function withDetail(User $user): User
+    {
+        return $user->loadMissing('role:id,slug')->loadCount([
+            'requestedTickets',
+            'assignedTickets',
+            'assignedTickets as open_assigned_tickets_count' => fn ($query) => $query->whereIn(
+                'status',
+                array_map(fn (TicketStatus $s): string => $s->value, TicketStatus::open()),
+            ),
+        ]);
+    }
+
     public function store(UserStoreRequest $request, Actor $actor, CreateAccount $create): JsonResponse
     {
         $user = $create->handle(
@@ -110,6 +147,6 @@ final class UserController extends Controller
             $setActive->handle($actor, $user, $request->boolean('isActive'));
         }
 
-        return response()->json(['data' => new UserResource($user->fresh()->load('role:id,slug'))]);
+        return response()->json(['data' => new UserDetailResource($this->withDetail($user->fresh()))]);
     }
 }

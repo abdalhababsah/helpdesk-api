@@ -33,6 +33,7 @@ final class PermissionMatrix
             PermissionSlug::TicketDelete->value => 'Delete a ticket',
             PermissionSlug::CategoryManage->value => 'Create and retire categories',
             PermissionSlug::AccountManage->value => 'Create, deactivate and re-role accounts',
+            PermissionSlug::AccountDelete->value => 'Delete an account',
             PermissionSlug::MetricsRead->value => 'View metrics across every user',
         ];
     }
@@ -70,6 +71,7 @@ final class PermissionMatrix
                 PermissionSlug::TicketDelete->value => PermissionScope::All,
                 PermissionSlug::CategoryManage->value => PermissionScope::All,
                 PermissionSlug::AccountManage->value => PermissionScope::All,
+                PermissionSlug::AccountDelete->value => PermissionScope::All,
                 PermissionSlug::MetricsRead->value => PermissionScope::All,
             ],
         ];
@@ -84,15 +86,15 @@ final class PermissionMatrix
     {
         return [
             RoleSlug::User->value => [
-                'name' => 'Employee',
+                'name' => 'User',
                 'description' => 'Raises tickets and follows their own.',
             ],
             RoleSlug::Moderator->value => [
-                'name' => 'Support Agent',
+                'name' => 'Moderator',
                 'description' => 'Works the shared queue and resolves tickets.',
             ],
             RoleSlug::Admin->value => [
-                'name' => 'Support Manager',
+                'name' => 'Admin',
                 'description' => 'Manages accounts, categories and metrics.',
             ],
         ];

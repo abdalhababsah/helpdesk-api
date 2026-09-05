@@ -18,6 +18,7 @@ enum PermissionSlug: string
     case TicketDelete = 'ticket:delete';
     case CategoryManage = 'category:manage';
     case AccountManage = 'account:manage';
+    case AccountDelete = 'account:delete';
     case MetricsRead = 'metrics:read';
 
     public function resource(): string

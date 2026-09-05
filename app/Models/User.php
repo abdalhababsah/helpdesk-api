@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -20,13 +21,14 @@ use Illuminate\Support\Carbon;
  * @property bool $is_active
  * @property int $token_version
  * @property Carbon|null $last_login_at
+ * @property Carbon|null $deleted_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use Concerns\HasMillisecondTimestamps, HasFactory, HasUlids, Notifiable;
+    use Concerns\HasMillisecondTimestamps, HasFactory, HasUlids, Notifiable, SoftDeletes;
 
     protected $fillable = ['name', 'email', 'password', 'role_id', 'is_active'];
 
@@ -56,6 +58,7 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'token_version' => 'integer',
             'last_login_at' => 'datetime',
+            'deleted_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -83,6 +86,12 @@ class User extends Authenticatable
     public function comments(): HasMany
     {
         return $this->hasMany(TicketComment::class, 'author_id');
+    }
+
+    /** @return HasMany<PasswordResetToken, $this> */
+    public function passwordResetTokens(): HasMany
+    {
+        return $this->hasMany(PasswordResetToken::class);
     }
 
     /** @return HasMany<RefreshToken, $this> */
