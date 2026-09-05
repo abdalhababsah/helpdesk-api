@@ -149,6 +149,67 @@ final class AdminEndpointsTest extends TestCase
         ])->assertStatus(400)->assertJsonFragment(['field' => 'password']);
     }
 
+    public function test_an_admin_can_correct_a_name_and_an_email(): void
+    {
+        $user = User::factory()->create(['name' => 'Jrodan Emploiye', 'email' => 'typo@example.test']);
+
+        $this->asUser($this->adminToken)->patchJson("/api/users/{$user->id}", [
+            'name' => 'Jordan Employee',
+            'email' => 'Jordan.Employee@Example.Test',
+        ])->assertOk()->assertJsonPath('data.name', 'Jordan Employee');
+
+        // Lower-cased on the way in, so the unique index and every lookup agree.
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'email' => 'jordan.employee@example.test']);
+        $this->assertDatabaseHas('action_logs', ['action' => 'account.details_changed', 'subject_id' => $user->id]);
+    }
+
+    public function test_correcting_a_name_does_not_sign_the_person_out(): void
+    {
+        $user = User::factory()->create(['email' => 'victim@example.test']);
+        $token = $this->login('victim@example.test')['token'];
+
+        $this->asUser($this->adminToken)
+            ->patchJson("/api/users/{$user->id}", ['name' => 'Corrected Name'])
+            ->assertOk();
+
+        // Neither field grants anything, so there is no reason to end their
+        // session over an administrator fixing a typo.
+        $this->asUser($token)->getJson('/api/auth/me')->assertOk();
+    }
+
+    public function test_an_email_already_in_use_is_rejected(): void
+    {
+        User::factory()->create(['email' => 'taken@example.test']);
+        $user = User::factory()->create();
+
+        $this->asUser($this->adminToken)
+            ->patchJson("/api/users/{$user->id}", ['email' => 'taken@example.test'])
+            ->assertStatus(400)
+            ->assertJsonFragment(['field' => 'email']);
+    }
+
+    public function test_saving_an_unchanged_email_is_allowed(): void
+    {
+        $user = User::factory()->create(['email' => 'same@example.test']);
+
+        // A form that posts every field must not collide with the row it edits.
+        $this->asUser($this->adminToken)
+            ->patchJson("/api/users/{$user->id}", ['email' => 'same@example.test', 'name' => 'New Name'])
+            ->assertOk();
+    }
+
+    public function test_name_and_role_can_change_in_one_request(): void
+    {
+        $user = User::factory()->create();
+
+        $this->asUser($this->adminToken)->patchJson("/api/users/{$user->id}", [
+            'name' => 'Promoted Person',
+            'roleId' => Role::where('slug', 'moderator')->value('id'),
+        ])->assertOk()
+            ->assertJsonPath('data.name', 'Promoted Person')
+            ->assertJsonPath('data.role', 'moderator');
+    }
+
     public function test_deactivating_an_account_ends_its_session_immediately(): void
     {
         $victim = User::factory()->create(['email' => 'victim@example.test']);
@@ -187,6 +248,32 @@ final class AdminEndpointsTest extends TestCase
         $this->asUser($secondToken)
             ->patchJson("/api/users/{$second->id}", ['isActive' => false])
             ->assertStatus(409);
+    }
+
+    public function test_the_role_list_backs_the_account_form(): void
+    {
+        // Role identifiers are generated at seed time, so a client cannot
+        // hardcode them and needs somewhere to read them from.
+        $response = $this->asUser($this->adminToken)->getJson('/api/roles')->assertOk();
+
+        $this->assertCount(3, $response->json('data'));
+        $this->assertEqualsCanonicalizing(
+            ['user', 'moderator', 'admin'],
+            array_column($response->json('data'), 'slug'),
+        );
+        $this->assertStringNotContainsString('permissions', $response->getContent());
+    }
+
+    public function test_an_already_deactivated_admin_can_still_be_demoted(): void
+    {
+        $dormant = User::factory()->admin()->inactive()->create();
+
+        // They are not one of the administrators who can still act, so removing
+        // their role takes nothing away that needed protecting.
+        $this->asUser($this->adminToken)
+            ->patchJson("/api/users/{$dormant->id}", ['roleId' => Role::where('slug', 'user')->value('id')])
+            ->assertOk()
+            ->assertJsonPath('data.role', 'user');
     }
 
     public function test_metrics_report_every_bucket_including_the_empty_ones(): void
