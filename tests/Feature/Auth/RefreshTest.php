@@ -92,6 +92,25 @@ final class RefreshTest extends TestCase
         $this->assertSame(0, RefreshToken::whereNull('revoked_at')->count());
     }
 
+    public function test_a_replay_also_kills_the_access_token_it_was_paired_with(): void
+    {
+        User::factory()->moderator()->create(['email' => 'sam@example.test']);
+        $first = $this->login('sam@example.test');
+
+        $second = $this->refreshWith($first['refresh'])->assertOk();
+        $liveToken = $second->json('data.accessToken');
+
+        $this->asUser($liveToken)->getJson('/api/auth/me')->assertOk();
+
+        $this->refreshWith($first['refresh'])->assertStatus(401);
+
+        // Revoking the refresh rows alone would leave this token working for
+        // the rest of its ten minutes, after the leak was already detected.
+        $this->asUser($liveToken)->getJson('/api/auth/me')
+            ->assertStatus(401)
+            ->assertJsonPath('error.code', 'AUTH_TOKEN_STALE');
+    }
+
     public function test_an_unknown_token_is_rejected(): void
     {
         $this->refreshWith('not-a-real-token')

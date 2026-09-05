@@ -113,6 +113,21 @@ final class TicketSearchTest extends TestCase
             ->assertOk()->assertJsonPath('pagination.totalItems', 0);
     }
 
+    public function test_a_short_term_padded_by_an_operator_still_falls_back(): void
+    {
+        // "vp*" is three characters, so a length check on the raw input lets it
+        // through, but stripping the star leaves a two-letter term the index
+        // does not hold. It has to take the LIKE path, not return nothing.
+        $this->assertGreaterThan(0, $this->search('vp*')->json('pagination.totalItems'));
+        $this->assertGreaterThan(0, $this->search('+vp')->json('pagination.totalItems'));
+    }
+
+    public function test_a_term_made_only_of_operators_does_not_error(): void
+    {
+        $this->search('***')->assertOk();
+        $this->search('+++ ---')->assertOk();
+    }
+
     public function test_a_term_matching_nothing_returns_an_empty_page(): void
     {
         $this->search('kubernetes')->assertOk()

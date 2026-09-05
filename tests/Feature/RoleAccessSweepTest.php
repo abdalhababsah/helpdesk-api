@@ -139,6 +139,10 @@ final class RoleAccessSweepTest extends TestCase
                 'request' => fn () => ['PATCH', '/api/categories/'.$category()->id, ['name' => 'Renamed']],
                 'expect' => ['anonymous' => 401, 'user' => 403, 'moderator' => 403, 'admin' => 200],
             ],
+            'GET /roles' => [
+                'request' => fn () => ['GET', '/api/roles', []],
+                'expect' => ['anonymous' => 401, 'user' => 403, 'moderator' => 403, 'admin' => 200],
+            ],
             'GET /users' => [
                 'request' => fn () => ['GET', '/api/users', []],
                 'expect' => ['anonymous' => 401, 'user' => 403, 'moderator' => 403, 'admin' => 200],
