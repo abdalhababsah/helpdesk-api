@@ -115,6 +115,8 @@ Base path is `/api`.
 | `POST` | `/auth/refresh` | Anyone with the cookie |
 | `POST` | `/auth/logout` | Anyone |
 | `POST` | `/auth/logout-all` | Signed in |
+| `POST` | `/auth/forgot-password` | Anyone |
+| `POST` | `/auth/reset-password` | Anyone with a link |
 | `GET` | `/auth/me` | Signed in |
 
 ### Tickets
@@ -145,9 +147,18 @@ Base path is `/api`.
 | `GET` | `/users/assignable` | Agents, admins |
 | `GET` | `/roles` | Admins |
 | `POST` | `/users` | Admins |
+| `GET` | `/users/{id}` | Admins |
 | `PATCH` | `/users/{id}` | Admins |
+| `DELETE` | `/users/{id}` | Admins |
+| `POST` | `/users/{id}/password-reset` | Admins |
 
 An admin can change a person's name, email, role and whether the account is active. Changing a role or deactivating signs them out everywhere immediately; correcting a name or email does not, because neither grants anything.
+
+`GET /users/{id}` returns the account with the counts you want before changing it: tickets raised, tickets ever assigned, and how many of those are still open.
+
+**Deleting an account** hides it rather than removing it. The person disappears from every list, cannot sign in, and every session ends at once. Their open tickets go back to the queue unassigned. Their name stays on resolved work and on every comment, because the row is kept. You cannot delete yourself or the last active admin.
+
+**Password reset** is link only. An admin can send someone a one-time link; nobody can type a password for another person. The link expires after 60 minutes, works once, and a newer link retires any older one. Anyone can also ask for a link themselves from the sign-in page.
 
 `/roles` exists because role ids are generated when you seed, so they differ per installation and the frontend cannot hardcode them. It is what fills the role dropdown on the account screens.
 
@@ -261,7 +272,7 @@ Every error looks the same:
 
 ## Who can do what
 
-| | Employee | Agent | Admin |
+| | User | Moderator | Admin |
 |---|---|---|---|
 | Raise a ticket | yes | yes | yes |
 | See a ticket | own only | any | any |
@@ -272,6 +283,7 @@ Every error looks the same:
 | Delete a ticket | no | no | yes |
 | Manage categories | no | no | yes |
 | Manage accounts | no | no | yes |
+| Delete an account | no | no | yes |
 | See reporting | no | no | yes |
 
 Every one of these is checked on the server, not just hidden in the interface. Calling an endpoint directly with the wrong role returns 403.
@@ -304,6 +316,10 @@ The person who raised a ticket is emailed when:
 
 - the status changes
 - someone picks the ticket up
+
+A person is also emailed a one-time link when a password reset is requested, by them or by an admin, and a confirmation once their password has changed.
+
+Every email uses one template in the same palette as the web app, in `resources/views/vendor/mail`. Buttons link to the React app, so `FRONTEND_URL` in `.env` must point at it.
 
 Nobody is emailed about something they did themselves, so an agent updating their own ticket sends nothing. Deactivated accounts are skipped, since they cannot sign in to act on it. Handing a ticket back to the queue sends nothing either: it is not something the requester can do anything about.
 
@@ -395,7 +411,6 @@ Left out on purpose, so the list reads as decisions rather than gaps:
 - Live updates. The queue does not push changes to open browsers
 - A screen for editing permissions. The tables support it, but the roles are fixed
 - More than one role per person
-- Password reset, since there is no email
 
 ---
 
@@ -417,5 +432,5 @@ docs/
   spec.md           The full design document and the reasoning behind it
   schema.dbml       The database diagram. Paste into dbdiagram.io
   helpdesk-api.postman_collection.json
-tests/              180 tests
+tests/              191 tests
 ```

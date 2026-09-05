@@ -136,6 +136,22 @@ hit "weak password" POST "/users" 400 "$ADMIN" "{\"name\":\"X\",\"email\":\"weak
 hit "deactivate" PATCH "/users/$NEWUSERID" 200 "$ADMIN" '{"isActive":false}'
 ADMINID=$(curl -s "$BASE/auth/me" -H "Authorization: Bearer $ADMIN" -H 'Accept: application/json' | jget 'data.user.id')
 hit "admin deactivating themselves" PATCH "/users/$ADMINID" 409 "$ADMIN" '{"isActive":false}'
+hit "view account" GET "/users/$NEWUSERID" 200 "$ADMIN"
+hit "view account as moderator" GET "/users/$NEWUSERID" 403 "$SAM"
+hit "reset link to deactivated account" POST "/users/$NEWUSERID/password-reset" 409 "$ADMIN"
+hit "reactivate" PATCH "/users/$NEWUSERID" 200 "$ADMIN" '{"isActive":true}'
+hit "send reset link" POST "/users/$NEWUSERID/password-reset" 202 "$ADMIN"
+hit "delete account as moderator" DELETE "/users/$NEWUSERID" 403 "$SAM"
+hit "delete account" DELETE "/users/$NEWUSERID" 204 "$ADMIN"
+hit "deleted account is gone" GET "/users/$NEWUSERID" 404 "$ADMIN"
+hit "admin deleting themselves" DELETE "/users/$ADMINID" 409 "$ADMIN"
+
+echo
+echo "== PASSWORD RESET =="
+hit "forgot password, known address" POST "/auth/forgot-password" 202 "" '{"email":"jordan@example.com"}'
+hit "forgot password, unknown address" POST "/auth/forgot-password" 202 "" '{"email":"nobody@example.com"}'
+hit "forgot password, no email" POST "/auth/forgot-password" 400 "" '{}'
+hit "reset with a bad link" POST "/auth/reset-password" 400 "" '{"token":"0000000000000000000000000000000000000000000000000000000000000000","email":"jordan@example.com","password":"BrandNew2Password","password_confirmation":"BrandNew2Password"}'
 
 echo
 echo "== METRICS =="

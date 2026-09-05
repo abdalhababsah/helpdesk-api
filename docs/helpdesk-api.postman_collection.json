@@ -799,6 +799,183 @@
           ]
         },
         {
+          "name": "Forgot password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "description": "Public. Always answers 202 with the same body whether or not the address has an account, so it cannot be used to find out who works here. If the account exists and is active, a one-time reset link is emailed. It expires after 60 minutes and a newer request retires any older link.\n\nRate limited: 5 per address and 10 per IP every 15 minutes.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jordan@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "Accepted",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/forgot-password",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "forgot-password"
+                  ]
+                },
+                "description": "Public. Always answers 202 with the same body whether or not the address has an account, so it cannot be used to find out who works here. If the account exists and is active, a one-time reset link is emailed. It expires after 60 minutes and a newer request retires any older link.\n\nRate limited: 5 per address and 10 per IP every 15 minutes.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"jordan@example.com\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "Accepted",
+              "code": 202,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"message\": \"If that address has an account, a reset link is on its way.\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reset password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "reset-password"
+              ]
+            },
+            "description": "Public. Takes the token and email from the link, plus the new password twice. On success the password changes, every existing session ends, and a confirmation email is sent.\n\n400 RESET_LINK_INVALID covers every way a link can be bad (unknown, used, expired, wrong address) so the message reveals nothing. 400 VALIDATION_FAILED with field details for a weak or mismatched password.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"<64 characters from the link>\",\n  \"email\": \"jordan@example.com\",\n  \"password\": \"BrandNew2Password\",\n  \"password_confirmation\": \"BrandNew2Password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "Password changed, no body",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/reset-password",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "reset-password"
+                  ]
+                },
+                "description": "Public. Takes the token and email from the link, plus the new password twice. On success the password changes, every existing session ends, and a confirmation email is sent.\n\n400 RESET_LINK_INVALID covers every way a link can be bad (unknown, used, expired, wrong address) so the message reveals nothing. 400 VALIDATION_FAILED with field details for a weak or mismatched password.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"<64 characters from the link>\",\n  \"email\": \"jordan@example.com\",\n  \"password\": \"BrandNew2Password\",\n  \"password_confirmation\": \"BrandNew2Password\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "text",
+              "header": [],
+              "cookie": [],
+              "body": ""
+            }
+          ]
+        },
+        {
           "name": "Sign out everywhere",
           "request": {
             "method": "POST",
@@ -2397,6 +2574,65 @@
           ]
         },
         {
+          "name": "View an account",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Admins only. The account plus the numbers you want before changing or deleting it: tickets they raised, tickets ever assigned to them, and how many of those are still open. 404 for an account that has been deleted."
+          },
+          "response": [
+            {
+              "name": "Account",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{userId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{userId}}"
+                  ]
+                },
+                "description": "Admins only. The account plus the numbers you want before changing or deleting it: tickets they raised, tickets ever assigned to them, and how many of those are still open. 404 for an account that has been deleted."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"id\": \"01m1sbydp6154j1zg6yck5jw3b\",\n    \"name\": \"Sam Support\",\n    \"email\": \"sam@example.com\",\n    \"role\": \"moderator\",\n    \"isActive\": true,\n    \"createdAt\": \"2026-09-05T18:05:29+00:00\",\n    \"lastLoginAt\": \"2026-09-06T08:12:03+00:00\",\n    \"ticketsRaised\": 2,\n    \"ticketsAssigned\": 31,\n    \"openTicketsAssigned\": 9,\n    \"updatedAt\": \"2026-09-06T08:12:03+00:00\"\n  }\n}"
+            }
+          ]
+        },
+        {
           "name": "Update an account",
           "request": {
             "method": "PATCH",
@@ -2478,6 +2714,121 @@
               ],
               "cookie": [],
               "body": "{\n  \"data\": {\n    \"id\": \"01m1sbydp6154j1zg6yck5jw3b\",\n    \"name\": \"New Agent Renamed\",\n    \"email\": \"renamed.agent@example.com\",\n    \"role\": \"user\",\n    \"isActive\": false,\n    \"createdAt\": \"2026-09-05T18:05:29+00:00\",\n    \"lastLoginAt\": null\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Send a password reset link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/password-reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}",
+                "password-reset"
+              ]
+            },
+            "description": "Admins only. Emails the person a one-time link to choose a new password. Admins never set a password directly. 409 if the account is deactivated: the link would lead to a login that refuses them."
+          },
+          "response": [
+            {
+              "name": "Link sent",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{userId}}/password-reset",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{userId}}",
+                    "password-reset"
+                  ]
+                },
+                "description": "Admins only. Emails the person a one-time link to choose a new password. Admins never set a password directly. 409 if the account is deactivated: the link would lead to a login that refuses them."
+              },
+              "status": "Accepted",
+              "code": 202,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"message\": \"A reset link has been emailed to sam@example.com.\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete an account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Admins only. The account disappears from every list and can no longer sign in; every session ends at once. Their open and in-progress tickets go back to the queue unassigned. Resolved work and every comment keep their name, because the row is kept and only hidden.\n\n409 for your own account and for the last active admin."
+          },
+          "response": [
+            {
+              "name": "Deleted, no body",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/{{userId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "{{userId}}"
+                  ]
+                },
+                "description": "Admins only. The account disappears from every list and can no longer sign in; every session ends at once. Their open and in-progress tickets go back to the queue unassigned. Resolved work and every comment keep their name, because the row is kept and only hidden.\n\n409 for your own account and for the last active admin."
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "text",
+              "header": [],
+              "cookie": [],
+              "body": ""
             }
           ]
         }
