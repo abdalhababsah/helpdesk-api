@@ -2,31 +2,76 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
+/**
+ * @property string $id
+ * @property string $name
+ * @property string $email
+ * @property string $password
+ * @property string $role_id
+ * @property bool $is_active
+ * @property int $token_version
+ * @property Carbon|null $last_login_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ */
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use Concerns\HasMillisecondTimestamps, HasUlids;
+
+    protected $fillable = ['name', 'email', 'password', 'role_id', 'is_active'];
 
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * The column is named password, not password_hash, so an accidental
+     * serialization would not stand out in review. Hiding it here means a
+     * response can only leak it if someone opts back in explicitly.
      */
+    protected $hidden = ['password'];
+
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
+            'token_version' => 'integer',
+            'last_login_at' => 'datetime',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
+    }
+
+    /** @return BelongsTo<Role, $this> */
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    /** @return HasMany<Ticket, $this> */
+    public function requestedTickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class, 'requester_id');
+    }
+
+    /** @return HasMany<Ticket, $this> */
+    public function assignedTickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class, 'assignee_id');
+    }
+
+    /** @return HasMany<TicketComment, $this> */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(TicketComment::class, 'author_id');
+    }
+
+    /** @return HasMany<RefreshToken, $this> */
+    public function refreshTokens(): HasMany
+    {
+        return $this->hasMany(RefreshToken::class);
     }
 }
