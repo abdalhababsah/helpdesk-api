@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Authorization\Ownable;
 use App\Enums\TicketPriority;
+use App\Enums\TicketSource;
 use App\Enums\TicketStatus;
 use Database\Factories\TicketFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -21,6 +22,8 @@ use Illuminate\Support\Carbon;
  * @property string $description
  * @property TicketStatus $status
  * @property TicketPriority $priority
+ * @property TicketSource $source
+ * @property string|null $conversation_id
  * @property string $category_id
  * @property string $requester_id
  * @property string|null $assignee_id
@@ -43,6 +46,8 @@ class Ticket extends Model implements Ownable
         'description',
         'status',
         'priority',
+        'source',
+        'conversation_id',
         'category_id',
         'requester_id',
         'assignee_id',
@@ -56,6 +61,7 @@ class Ticket extends Model implements Ownable
         return [
             'status' => TicketStatus::class,
             'priority' => TicketPriority::class,
+            'source' => TicketSource::class,
             'due_at' => 'datetime',
             'resolved_at' => 'datetime',
             'closed_at' => 'datetime',
