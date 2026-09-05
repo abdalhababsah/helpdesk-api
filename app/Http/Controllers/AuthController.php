@@ -8,6 +8,7 @@ use App\Actions\Auth\LogoutSession;
 use App\Actions\Auth\RefreshSession;
 use App\Authorization\Actor;
 use App\Enums\PermissionScope;
+use App\Http\Requests\LoginRequest;
 use App\Http\Resources\UserResource;
 use App\Support\IssuedSession;
 use Illuminate\Http\JsonResponse;
@@ -16,14 +17,12 @@ use Symfony\Component\HttpFoundation\Cookie;
 
 final class AuthController extends Controller
 {
-    public function login(Request $request, LoginUser $login): JsonResponse
+    public function login(LoginRequest $request, LoginUser $login): JsonResponse
     {
-        $data = $request->validate([
-            'email' => ['required', 'string', 'max:255'],
-            'password' => ['required', 'string', 'max:255'],
-        ]);
-
-        return $this->sessionResponse($login->handle($data['email'], $data['password']));
+        return $this->sessionResponse($login->handle(
+            $request->string('email')->toString(),
+            $request->string('password')->toString(),
+        ));
     }
 
     public function refresh(Request $request, RefreshSession $refresh): JsonResponse

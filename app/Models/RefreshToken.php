@@ -6,7 +6,6 @@ use App\Enums\RefreshRevokeReason;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -54,11 +53,6 @@ class RefreshToken extends Model
         ];
     }
 
-    public function isUsable(): bool
-    {
-        return $this->revoked_at === null && $this->expires_at->isFuture();
-    }
-
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
@@ -73,15 +67,5 @@ class RefreshToken extends Model
     public function replacedBy(): BelongsTo
     {
         return $this->belongsTo(self::class, 'replaced_by_id');
-    }
-
-    /**
-     * The token this one superseded. Inverse of replacedBy.
-     *
-     * @return HasOne<self, $this>
-     */
-    public function replaces(): HasOne
-    {
-        return $this->hasOne(self::class, 'replaced_by_id');
     }
 }

@@ -32,12 +32,6 @@ final class PermissionRegistry
         return $this->matrix()[$roleSlug] ?? [];
     }
 
-    /** Call after any write to role_permissions. */
-    public function flush(): void
-    {
-        $this->matrix = null;
-    }
-
     /** @return array<string, array<string, PermissionScope>> */
     private function matrix(): array
     {

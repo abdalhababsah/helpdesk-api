@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Authorization\PermissionMatrix;
+use App\Enums\PermissionSlug;
 use App\Models\Permission;
 use Illuminate\Database\Seeder;
 
@@ -13,11 +14,15 @@ class PermissionSeeder extends Seeder
         $catalogue = PermissionMatrix::catalogue();
 
         foreach ($catalogue as $slug => $description) {
-            [$resource, $action] = explode(':', $slug);
+            $permission = PermissionSlug::from($slug);
 
             Permission::updateOrCreate(
                 ['slug' => $slug],
-                ['resource' => $resource, 'action' => $action, 'description' => $description],
+                [
+                    'resource' => $permission->resource(),
+                    'action' => $permission->action(),
+                    'description' => $description,
+                ],
             );
         }
 
