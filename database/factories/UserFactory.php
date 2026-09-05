@@ -2,44 +2,68 @@
 
 namespace Database\Factories;
 
+use App\Enums\RoleSlug;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use RuntimeException;
 
 /**
  * @extends Factory<User>
  */
-class UserFactory extends Factory
+final class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
-    protected static ?string $password;
+    protected $model = User::class;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     public function definition(): array
     {
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
+            // The model casts this, so the factory hands over the plaintext and
+            // never has to know which algorithm is configured.
+            'password' => 'Passw0rd!',
+            'role_id' => fn (): string => $this->roleId(RoleSlug::User),
+            'is_active' => true,
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
+    public function role(RoleSlug $role): static
     {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
+        return $this->state(fn (): array => ['role_id' => $this->roleId($role)]);
+    }
+
+    public function admin(): static
+    {
+        return $this->role(RoleSlug::Admin);
+    }
+
+    public function moderator(): static
+    {
+        return $this->role(RoleSlug::Moderator);
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn (): array => ['is_active' => false]);
+    }
+
+    /**
+     * Resolved from the seeded rows rather than created on demand. A role
+     * invented here would carry no grants, so a test using it would pass
+     * against a configuration the application never ships.
+     */
+    private function roleId(RoleSlug $role): string
+    {
+        $id = Role::where('slug', $role->value)->value('id');
+
+        if ($id === null) {
+            throw new RuntimeException(
+                "Role [{$role->value}] does not exist. Seed roles and permissions before using UserFactory."
+            );
+        }
+
+        return $id;
     }
 }

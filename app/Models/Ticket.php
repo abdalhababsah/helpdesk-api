@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Authorization\Ownable;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
+use Database\Factories\TicketFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -29,9 +32,10 @@ use Illuminate\Support\Carbon;
  * @property Carbon $updated_at
  * @property-read bool $is_overdue
  */
-class Ticket extends Model
+class Ticket extends Model implements Ownable
 {
-    use Concerns\HasMillisecondTimestamps, HasUlids, SoftDeletes;
+    /** @use HasFactory<TicketFactory> */
+    use Concerns\HasMillisecondTimestamps, HasFactory, HasUlids, SoftDeletes;
 
     protected $fillable = [
         'subject',
@@ -70,6 +74,12 @@ class Ticket extends Model
     {
         return Attribute::get(fn (): bool => $this->due_at->isPast()
             && in_array($this->status, TicketStatus::open(), true));
+    }
+
+    /** Ownership for scope-limited grants is the requester, never the assignee. */
+    public function ownerId(): string
+    {
+        return $this->requester_id;
     }
 
     /** @return BelongsTo<Category, $this> */

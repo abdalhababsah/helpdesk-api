@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Database\Factories\CategoryFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
@@ -17,7 +19,8 @@ use Illuminate\Support\Carbon;
  */
 class Category extends Model
 {
-    use Concerns\HasMillisecondTimestamps, HasUlids;
+    /** @use HasFactory<CategoryFactory> */
+    use Concerns\HasMillisecondTimestamps, HasFactory, HasUlids;
 
     protected $fillable = ['slug', 'name', 'is_active'];
 

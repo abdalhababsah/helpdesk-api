@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -22,9 +24,22 @@ use Illuminate\Support\Carbon;
  */
 class User extends Authenticatable
 {
-    use Concerns\HasMillisecondTimestamps, HasUlids;
+    /** @use HasFactory<UserFactory> */
+    use Concerns\HasMillisecondTimestamps, HasFactory, HasUlids;
 
     protected $fillable = ['name', 'email', 'password', 'role_id', 'is_active'];
+
+    /**
+     * Mirrors the column defaults. Eloquent does not read them back after an
+     * insert, so without this a freshly created user carries a null
+     * token_version, and a token minted from it would be stale on first use.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'is_active' => true,
+        'token_version' => 1,
+    ];
 
     /**
      * The column is named password, not password_hash, so an accidental

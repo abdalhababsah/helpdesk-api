@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Database\Factories\TicketCommentFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -17,7 +19,8 @@ use Illuminate\Support\Carbon;
  */
 class TicketComment extends Model
 {
-    use Concerns\HasMillisecondTimestamps, HasUlids;
+    /** @use HasFactory<TicketCommentFactory> */
+    use Concerns\HasMillisecondTimestamps, HasFactory, HasUlids;
 
     protected $fillable = ['ticket_id', 'author_id', 'body'];
 
