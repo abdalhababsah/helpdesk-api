@@ -3,11 +3,15 @@
 namespace App\Providers;
 
 use App\Authorization\PermissionRegistry;
+use App\Models\AssistantGuest;
+use App\Models\AssistantSession;
 use App\Models\Category;
+use App\Models\KnowledgeArticle;
 use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\User;
+use App\Support\AssistantParticipant;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
@@ -50,6 +54,12 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinutes(15, 10)->by('reset:ip:'.$request->ip()),
         ]);
 
+        // Each message costs a provider call, so the limit is per participant
+        // rather than per address: a shared office must not share one bucket.
+        RateLimiter::for('assistant-message', fn (Request $request) => Limit::perMinutes(10, 20)->by('assistant:msg:'.$this->assistantKey($request)));
+
+        RateLimiter::for('assistant-start', fn (Request $request) => Limit::perHour(5)->by('assistant:start:'.$this->assistantKey($request)));
+
         RateLimiter::for('refresh', fn (Request $request) => Limit::perMinutes(15, 30)->by('refresh:ip:'.$request->ip()));
 
         Relation::enforceMorphMap([
@@ -58,6 +68,25 @@ class AppServiceProvider extends ServiceProvider
             'category' => Category::class,
             'ticket' => Ticket::class,
             'ticket_comment' => TicketComment::class,
+            'knowledge_article' => KnowledgeArticle::class,
+            'assistant_session' => AssistantSession::class,
+            'assistant_guest' => AssistantGuest::class,
         ]);
+    }
+
+    /**
+     * Who to count a request against. The token identifies a person; a guest
+     * identifies itself with its own header, falling back to the address when
+     * it has not been given one yet.
+     */
+    private function assistantKey(Request $request): string
+    {
+        $bearer = $request->bearerToken();
+
+        if ($bearer !== null && $bearer !== '') {
+            return 'token:'.hash('sha256', $bearer);
+        }
+
+        return 'guest:'.($request->header(AssistantParticipant::HEADER) ?? $request->ip());
     }
 }
