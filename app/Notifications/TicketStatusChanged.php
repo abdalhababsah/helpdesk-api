@@ -52,7 +52,9 @@ final class TicketStatusChanged extends Notification implements ShouldQueue
             $message->line('This ticket is now closed and will not take further replies.');
         }
 
-        return $message->line('Reference: '.$this->ticket->getKey());
+        return $message
+            ->action('Open the ticket', config('app.frontend_url').'/tickets/'.$this->ticket->getKey())
+            ->line('Reference: '.$this->ticket->getKey());
     }
 
     private function label(TicketStatus $status): string

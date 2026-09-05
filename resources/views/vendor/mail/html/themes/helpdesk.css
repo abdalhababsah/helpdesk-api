@@ -1,0 +1,287 @@
+/* Ink and Sage. Mirrors the web app: matte, light, one accent. Inlined at send time. */
+
+body,
+body *:not(html):not(style):not(br):not(tr):not(code) {
+    box-sizing: border-box;
+    font-family: Manrope, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    position: relative;
+}
+
+body {
+    -webkit-text-size-adjust: none;
+    background-color: #F4F6F5;
+    color: #2D3A4E;
+    height: 100%;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+    width: 100% !important;
+}
+
+p, ul, ol, blockquote {
+    line-height: 1.5;
+    text-align: left;
+}
+
+a {
+    color: #2F6B5E;
+}
+
+a img {
+    border: none;
+}
+
+h1 {
+    color: #0F1B2D;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-top: 0;
+    text-align: left;
+}
+
+h2 {
+    color: #0F1B2D;
+    font-size: 17px;
+    font-weight: 600;
+    margin-top: 0;
+    text-align: left;
+}
+
+h3 {
+    color: #0F1B2D;
+    font-size: 15px;
+    font-weight: 600;
+    margin-top: 0;
+    text-align: left;
+}
+
+p {
+    color: #2D3A4E;
+    font-size: 15px;
+    line-height: 1.6;
+    margin-top: 0;
+    text-align: left;
+}
+
+p.sub {
+    font-size: 12px;
+    color: #4A5568;
+}
+
+img {
+    max-width: 100%;
+}
+
+.wrapper {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    background-color: #F4F6F5;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.content {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.header {
+    padding: 32px 0 20px;
+    text-align: center;
+}
+
+.header a {
+    color: #0F1B2D;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+}
+
+.header .mark {
+    background-color: #2F6B5E;
+    border-radius: 6px;
+    color: #F4F6F5;
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    height: 24px;
+    line-height: 24px;
+    margin-right: 8px;
+    text-align: center;
+    vertical-align: middle;
+    width: 24px;
+}
+
+.logo {
+    height: 28px;
+    max-height: 28px;
+    width: 28px;
+}
+
+.body {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    background-color: #F4F6F5;
+    border: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.inner-body {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 570px;
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    margin: 0 auto;
+    padding: 0;
+    width: 570px;
+}
+
+.subcopy {
+    border-top: 1px solid #E2E8F0;
+    margin-top: 24px;
+    padding-top: 16px;
+}
+
+.subcopy p {
+    font-size: 12px;
+    color: #4A5568;
+    word-break: break-all;
+}
+
+.footer {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 570px;
+    margin: 0 auto;
+    padding: 0;
+    text-align: center;
+    width: 570px;
+}
+
+.footer p {
+    color: #8A96A6;
+    font-size: 12px;
+    text-align: center;
+}
+
+.footer a {
+    color: #4A5568;
+    text-decoration: underline;
+}
+
+.content-cell {
+    max-width: 100vw;
+    padding: 32px;
+}
+
+.action {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 28px auto;
+    padding: 0;
+    text-align: center;
+    width: 100%;
+}
+
+.button {
+    -webkit-text-size-adjust: none;
+    border-radius: 6px;
+    color: #F4F6F5;
+    display: inline-block;
+    font-size: 15px;
+    font-weight: 600;
+    overflow: hidden;
+    text-decoration: none;
+    padding: 12px 22px;
+}
+
+.button-primary,
+.button-blue,
+.button-green,
+.button-success {
+    background-color: #2F6B5E;
+    border: 1px solid #2F6B5E;
+    color: #F4F6F5;
+}
+
+.button-red,
+.button-error {
+    background-color: #9B2C2C;
+    border: 1px solid #9B2C2C;
+    color: #F4F6F5;
+}
+
+.panel {
+    border-left: 3px solid #2F6B5E;
+    margin: 21px 0;
+}
+
+.panel-content {
+    background-color: #EDF1EF;
+    color: #2D3A4E;
+    padding: 16px;
+}
+
+.panel-content p {
+    color: #2D3A4E;
+}
+
+.panel-item {
+    padding: 0;
+}
+
+.panel-item p:last-of-type {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.table table {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 24px auto;
+    width: 100%;
+}
+
+.table th {
+    border-bottom: 1px solid #E2E8F0;
+    color: #4A5568;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin: 0;
+    padding-bottom: 8px;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.table td {
+    color: #2D3A4E;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+    padding: 10px 0;
+    border-bottom: 1px solid #EDF1EF;
+}
+
+.content-cell p:last-of-type {
+    margin-bottom: 0;
+}
+
+.break-all {
+    word-break: break-all;
+}

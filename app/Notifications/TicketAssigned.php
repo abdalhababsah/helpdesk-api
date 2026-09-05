@@ -43,6 +43,7 @@ final class TicketAssigned extends Notification implements ShouldQueue
             ->greeting("Hello {$this->ticket->requester->name},")
             ->line("{$this->assignee->name} has picked up your ticket \"{$this->ticket->subject}\".")
             ->line('You will hear again when the status changes.')
+            ->action('Open the ticket', config('app.frontend_url').'/tickets/'.$this->ticket->getKey())
             ->line('Reference: '.$this->ticket->getKey());
     }
 }
