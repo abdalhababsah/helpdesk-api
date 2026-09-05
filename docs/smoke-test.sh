@@ -72,11 +72,18 @@ hit "summary as user" GET "/tickets/summary" 403 "$JORDAN"
 echo
 echo "== TICKET WRITE =="
 CAT=$(curl -s "$BASE/categories" -H "Authorization: Bearer $JORDAN" -H 'Accept: application/json' | jget 'data.0.id')
-NEW=$(curl -s -X POST "$BASE/tickets" -H "Authorization: Bearer $JORDAN" -H 'Content-Type: application/json' -H 'Accept: application/json' \
+# A user raises tickets through the assistant, so the direct endpoint refuses
+# them. Moderators and admins keep it.
+hit "user cannot create directly" POST "/tickets" 403 "$JORDAN" "{\"subject\":\"Smoke test ticket\",\"description\":\"Raised by the manual smoke run.\",\"categoryId\":\"$CAT\"}"
+NEW=$(curl -s -X POST "$BASE/tickets" -H "Authorization: Bearer $SAM" -H 'Content-Type: application/json' -H 'Accept: application/json' \
   -d "{\"subject\":\"Smoke test ticket\",\"description\":\"Raised by the manual smoke run.\",\"categoryId\":\"$CAT\",\"priority\":\"high\"}")
-NEWID=$(echo "$NEW" | jget 'data.id')
-[ -n "$NEWID" ] && { PASS=$((PASS+1)); echo "  ok   201 create ticket ($NEWID)"; } || { FAIL=$((FAIL+1)); echo "  FAIL create ticket: $(head -c 200 <<<"$NEW")"; }
-hit "create with short subject" POST "/tickets" 400 "$JORDAN" "{\"subject\":\"Hi\",\"description\":\"too short\",\"categoryId\":\"$CAT\"}"
+MODTICKET=$(echo "$NEW" | jget 'data.id')
+[ -n "$MODTICKET" ] && { PASS=$((PASS+1)); echo "  ok   201 moderator creates a ticket ($MODTICKET)"; } || { FAIL=$((FAIL+1)); echo "  FAIL create ticket: $(head -c 200 <<<"$NEW")"; }
+[ "$(echo "$NEW" | jget 'data.source')" = "direct" ] && { PASS=$((PASS+1)); echo "  ok   200 it is marked direct"; } || { FAIL=$((FAIL+1)); echo "  FAIL source not direct"; }
+hit "create with short subject" POST "/tickets" 400 "$SAM" "{\"subject\":\"Hi\",\"description\":\"too short\",\"categoryId\":\"$CAT\"}"
+# The rest of this section needs a ticket the employee owns, which the seeded
+# data provides now that they cannot raise one here.
+NEWID=$(curl -s "$BASE/tickets?status=open&limit=1" -H "Authorization: Bearer $JORDAN" -H 'Accept: application/json' | jget 'data.0.id')
 hit "show own ticket" GET "/tickets/$NEWID" 200 "$JORDAN"
 hit "show as moderator" GET "/tickets/$NEWID" 200 "$SAM"
 SAMID=$(curl -s "$BASE/auth/me" -H "Authorization: Bearer $SAM" -H 'Accept: application/json' | jget 'data.user.id')
@@ -152,6 +159,34 @@ hit "forgot password, known address" POST "/auth/forgot-password" 202 "" '{"emai
 hit "forgot password, unknown address" POST "/auth/forgot-password" 202 "" '{"email":"nobody@example.com"}'
 hit "forgot password, no email" POST "/auth/forgot-password" 400 "" '{}'
 hit "reset with a bad link" POST "/auth/reset-password" 400 "" '{"token":"0000000000000000000000000000000000000000000000000000000000000000","email":"jordan@example.com","password":"BrandNew2Password","password_confirmation":"BrandNew2Password"}'
+
+echo
+echo "== ASSISTANT =="
+GUESTCONV=$(curl -s -X POST "$BASE/assistant/conversations" -H 'Accept: application/json')
+GUESTID=$(echo "$GUESTCONV" | jget 'data.guestId')
+GUESTSESSION=$(echo "$GUESTCONV" | jget 'data.session.id')
+[ -n "$GUESTID" ] && { PASS=$((PASS+1)); echo "  ok   201 guest starts a conversation"; } || { FAIL=$((FAIL+1)); echo "  FAIL guest conversation: $(head -c 200 <<<"$GUESTCONV")"; }
+GUESTCODE=$(curl -s -o /tmp/resp.json -w '%{http_code}' "$BASE/assistant/conversations/$GUESTSESSION" -H 'Accept: application/json' -H "X-Assistant-Guest: $GUESTID")
+[ "$GUESTCODE" = "200" ] && { PASS=$((PASS+1)); echo "  ok   200 guest reads its own conversation"; } || { FAIL=$((FAIL+1)); echo "  FAIL guest read: $GUESTCODE"; }
+hit "another guest cannot read it" GET "/assistant/conversations/$GUESTSESSION" 403
+hit "moderator cannot read it" GET "/assistant/conversations/$GUESTSESSION" 403 "$SAM"
+hit "admin can read it" GET "/assistant/conversations/$GUESTSESSION" 200 "$ADMIN"
+hit "empty message" POST "/assistant/conversations/$GUESTSESSION/messages" 400 "" '{"message":""}'
+hit "guest cannot raise a ticket" POST "/assistant/conversations/$GUESTSESSION/tickets" 403 "" "{\"subject\":\"A subject long enough\",\"description\":\"A description that is long enough.\",\"categoryId\":\"$CAT\"}"
+hit "user still cannot raise a ticket directly" POST "/tickets" 403 "$JORDAN" "{\"subject\":\"A subject long enough\",\"description\":\"A description that is long enough.\",\"categoryId\":\"$CAT\"}"
+hit "conversations report as admin" GET "/assistant/conversations" 200 "$ADMIN"
+hit "conversations report as moderator" GET "/assistant/conversations" 403 "$SAM"
+
+echo
+echo "== KNOWLEDGE =="
+hit "list as admin" GET "/knowledge" 200 "$ADMIN"
+hit "list as moderator" GET "/knowledge" 403 "$SAM"
+NEWARTICLE=$(curl -s -X POST "$BASE/knowledge" -H "Authorization: Bearer $ADMIN" -H 'Content-Type: application/json' -H 'Accept: application/json' \
+  -d "{\"title\":\"Smoke article $STAMP\",\"body\":\"A body that is long enough to pass validation.\",\"keywords\":\"smoke\"}")
+NEWARTICLEID=$(echo "$NEWARTICLE" | jget 'data.id')
+[ -n "$NEWARTICLEID" ] && { PASS=$((PASS+1)); echo "  ok   201 write an article"; } || { FAIL=$((FAIL+1)); echo "  FAIL write article: $(head -c 200 <<<"$NEWARTICLE")"; }
+hit "retire it" PATCH "/knowledge/$NEWARTICLEID" 200 "$ADMIN" '{"isActive":false}'
+hit "short title" POST "/knowledge" 400 "$ADMIN" '{"title":"x","body":"A body that is long enough to pass validation."}'
 
 echo
 echo "== METRICS =="

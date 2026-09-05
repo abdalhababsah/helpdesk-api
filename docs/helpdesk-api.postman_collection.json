@@ -49,6 +49,21 @@
       "key": "roleId",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "sessionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "guestId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "articleId",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -2829,6 +2844,711 @@
               "header": [],
               "cookie": [],
               "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Assistant",
+      "item": [
+        {
+          "name": "Start a conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Assistant-Guest",
+                "value": "{{guestId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assistant/conversations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assistant",
+                "conversations"
+              ]
+            },
+            "description": "Anyone, signed in or not. A guest is given a guestId to send back in the X-Assistant-Guest header on every later call; a signed-in caller gets null and is identified by the token.\n\nThe greeting is fixed text, not a model call, so opening the panel costs nothing.\n\nLimited to 5 new conversations an hour per person or guest.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "Started",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Assistant-Guest",
+                    "value": "{{guestId}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/assistant/conversations",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "assistant",
+                    "conversations"
+                  ]
+                },
+                "description": "Anyone, signed in or not. A guest is given a guestId to send back in the X-Assistant-Guest header on every later call; a signed-in caller gets null and is identified by the token.\n\nThe greeting is fixed text, not a model call, so opening the panel costs nothing.\n\nLimited to 5 new conversations an hour per person or guest.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"session\": {\n      \"id\": \"01m1t0\",\n      \"outcome\": \"open\",\n      \"ticketId\": null,\n      \"turns\": 0,\n      \"participant\": {\n        \"type\": \"assistant_guest\",\n        \"id\": \"01m1t0\",\n        \"name\": \"Guest\"\n      },\n      \"lastAgent\": null,\n      \"tokens\": {\n        \"input\": 0,\n        \"output\": 0\n      },\n      \"lastActivityAt\": \"2026-09-07T09:00:00+00:00\",\n      \"createdAt\": \"2026-09-07T09:00:00+00:00\"\n    },\n    \"guestId\": \"01m1t0\",\n    \"greeting\": \"Hello. I can answer questions about IT, HR and how the helpdesk works, or help you raise a ticket. What is going on?\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Send a message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Assistant-Guest",
+                "value": "{{guestId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assistant/conversations/{{sessionId}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assistant",
+                "conversations",
+                "{{sessionId}}",
+                "messages"
+              ]
+            },
+            "description": "One turn. Returns the reply and a card.\n\nThe card is one of four: none, sign_in_required, existing_ticket, or ticket_draft. Every card is checked against the database before it is returned, so a category or a ticket id the model invented comes back as none.\n\n403 if the conversation is not yours. 409 once it has been settled. 502 ASSISTANT_UNAVAILABLE if the provider fails twice. Limited to 20 messages per 10 minutes.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"My VPN drops every hour since Monday and I cannot join calls\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "A draft to confirm",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Assistant-Guest",
+                    "value": "{{guestId}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/assistant/conversations/{{sessionId}}/messages",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "assistant",
+                    "conversations",
+                    "{{sessionId}}",
+                    "messages"
+                  ]
+                },
+                "description": "One turn. Returns the reply and a card.\n\nThe card is one of four: none, sign_in_required, existing_ticket, or ticket_draft. Every card is checked against the database before it is returned, so a category or a ticket id the model invented comes back as none.\n\n403 if the conversation is not yours. 409 once it has been settled. 502 ASSISTANT_UNAVAILABLE if the provider fails twice. Limited to 20 messages per 10 minutes.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"message\": \"My VPN drops every hour since Monday and I cannot join calls\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"reply\": \"That sounds like it is stopping you working. I have drafted a ticket, check the details and confirm.\",\n    \"card\": {\n      \"type\": \"ticket_draft\",\n      \"subject\": \"VPN drops every hour\",\n      \"description\": \"My VPN has dropped every hour since Monday and I cannot join calls.\",\n      \"categoryId\": \"01m1s5\",\n      \"categoryName\": \"IT - Access & VPN\",\n      \"priority\": \"urgent\",\n      \"reason\": \"You cannot work while it keeps dropping.\"\n    },\n    \"session\": {\n      \"id\": \"01m1t0\",\n      \"outcome\": \"open\",\n      \"turns\": 1\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Read a conversation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Assistant-Guest",
+                "value": "{{guestId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assistant/conversations/{{sessionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assistant",
+                "conversations",
+                "{{sessionId}}"
+              ]
+            },
+            "description": "The session plus every message as the person saw it. Its participant, or an admin for the report. A moderator is refused: reading someone's conversation is oversight, and oversight is the admin's.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [
+            {
+              "name": "Conversation",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Assistant-Guest",
+                    "value": "{{guestId}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/assistant/conversations/{{sessionId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "assistant",
+                    "conversations",
+                    "{{sessionId}}"
+                  ]
+                },
+                "description": "The session plus every message as the person saw it. Its participant, or an admin for the report. A moderator is refused: reading someone's conversation is oversight, and oversight is the admin's.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"id\": \"01m1t0\",\n    \"outcome\": \"open\",\n    \"turns\": 1,\n    \"messages\": [\n      {\n        \"id\": \"019\",\n        \"role\": \"user\",\n        \"text\": \"My VPN drops every hour\",\n        \"card\": null,\n        \"createdAt\": \"2026-09-07T09:00:01+00:00\"\n      },\n      {\n        \"id\": \"01a\",\n        \"role\": \"assistant\",\n        \"text\": \"I have drafted a ticket.\",\n        \"card\": {\n          \"type\": \"ticket_draft\",\n          \"subject\": \"VPN drops every hour\"\n        },\n        \"createdAt\": \"2026-09-07T09:00:04+00:00\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Confirm the draft and raise the ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assistant/conversations/{{sessionId}}/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assistant",
+                "conversations",
+                "{{sessionId}}",
+                "tickets"
+              ]
+            },
+            "description": "Creates the ticket from the draft the person edited. Signed in only, and only for your own conversation.\n\nThe priority is not taken from this request. It comes from the draft the assistant made and the server kept, so a client cannot raise its own ticket as urgent.\n\nThe conversation is closed afterwards and the confirmation is appended to it.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"VPN drops every hour\",\n  \"description\": \"My VPN has dropped every hour since Monday and I cannot join calls.\",\n  \"categoryId\": \"{{categoryId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "Raised",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/assistant/conversations/{{sessionId}}/tickets",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "assistant",
+                    "conversations",
+                    "{{sessionId}}",
+                    "tickets"
+                  ]
+                },
+                "description": "Creates the ticket from the draft the person edited. Signed in only, and only for your own conversation.\n\nThe priority is not taken from this request. It comes from the draft the assistant made and the server kept, so a client cannot raise its own ticket as urgent.\n\nThe conversation is closed afterwards and the confirmation is appended to it.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"subject\": \"VPN drops every hour\",\n  \"description\": \"My VPN has dropped every hour since Monday and I cannot join calls.\",\n  \"categoryId\": \"{{categoryId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"ticket\": {\n      \"id\": \"01m1t1\",\n      \"subject\": \"VPN drops every hour\",\n      \"status\": \"open\",\n      \"priority\": \"urgent\",\n      \"source\": \"assistant\"\n    },\n    \"message\": \"Your ticket has been raised. A moderator will be in touch. You can follow it under Your tickets.\",\n    \"session\": {\n      \"id\": \"01m1t0\",\n      \"outcome\": \"ticket_raised\",\n      \"ticketId\": \"01m1t1\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Claim a guest conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Assistant-Guest",
+                "value": "{{guestId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assistant/conversations/{{sessionId}}/claim",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assistant",
+                "conversations",
+                "{{sessionId}}",
+                "claim"
+              ]
+            },
+            "description": "A guest who signs in keeps what they were saying. Send the token of the person who just signed in and the X-Assistant-Guest header of the guest who was talking.\n\nOnly that guest can hand it over, and only while it is still open."
+          },
+          "response": [
+            {
+              "name": "Claimed",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "X-Assistant-Guest",
+                    "value": "{{guestId}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/assistant/conversations/{{sessionId}}/claim",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "assistant",
+                    "conversations",
+                    "{{sessionId}}",
+                    "claim"
+                  ]
+                },
+                "description": "A guest who signs in keeps what they were saying. Send the token of the person who just signed in and the X-Assistant-Guest header of the guest who was talking.\n\nOnly that guest can hand it over, and only while it is still open."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"id\": \"01m1t0\",\n    \"outcome\": \"open\",\n    \"participant\": {\n      \"type\": \"user\",\n      \"id\": \"01m1sb\",\n      \"name\": \"Jordan Employee\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List conversations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assistant/conversations?outcome=answered",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assistant",
+                "conversations?outcome=answered"
+              ]
+            },
+            "description": "Admins only. Every conversation with its outcome, turns, tokens and ticket. Filter by outcome (open, answered, ticket_raised, abandoned) and by participant (user, assistant_guest)."
+          },
+          "response": [
+            {
+              "name": "Page",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/assistant/conversations?outcome=answered",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "assistant",
+                    "conversations?outcome=answered"
+                  ]
+                },
+                "description": "Admins only. Every conversation with its outcome, turns, tokens and ticket. Filter by outcome (open, answered, ticket_raised, abandoned) and by participant (user, assistant_guest)."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"01m1t0\",\n      \"outcome\": \"answered\",\n      \"turns\": 2,\n      \"participant\": {\n        \"type\": \"user\",\n        \"id\": \"01m1sb\",\n        \"name\": \"Jordan Employee\"\n      },\n      \"lastAgent\": \"knowledge_base\",\n      \"tokens\": {\n        \"input\": 1840,\n        \"output\": 210\n      }\n    }\n  ],\n  \"pagination\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"totalItems\": 1,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Knowledge",
+      "item": [
+        {
+          "name": "List articles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/knowledge?includeRetired=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "knowledge?includeRetired=1"
+              ]
+            },
+            "description": "Admins only. What the assistant knows. Retired articles are hidden unless you ask for them, and the assistant never reads them. Add search= to rank by relevance instead of title."
+          },
+          "response": [
+            {
+              "name": "Page",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/knowledge?includeRetired=1",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "knowledge?includeRetired=1"
+                  ]
+                },
+                "description": "Admins only. What the assistant knows. Retired articles are hidden unless you ask for them, and the assistant never reads them. Add search= to rank by relevance instead of title."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"01m1t2\",\n      \"title\": \"VPN will not connect from home\",\n      \"body\": \"Check that you are on an ordinary home connection...\",\n      \"keywords\": \"vpn, remote, connect\",\n      \"category\": {\n        \"id\": \"01m1s5\",\n        \"name\": \"IT - Access & VPN\"\n      },\n      \"isActive\": true,\n      \"updatedAt\": \"2026-09-07T09:00:00+00:00\"\n    }\n  ],\n  \"pagination\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"totalItems\": 1,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Write an article",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/knowledge",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "knowledge"
+              ]
+            },
+            "description": "Admins only. The body is what the assistant reads out, so write it as the answer a person should get. Keywords carry words the title and body might not contain. The category is optional: leave it out for anything about the desk itself.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"VPN will not connect from home\",\n  \"body\": \"Quit the VPN client completely and open it again, then approve the second factor within 30 seconds.\",\n  \"keywords\": \"vpn, remote, connect\",\n  \"categoryId\": \"{{categoryId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "Written",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/knowledge",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "knowledge"
+                  ]
+                },
+                "description": "Admins only. The body is what the assistant reads out, so write it as the answer a person should get. Keywords carry words the title and body might not contain. The category is optional: leave it out for anything about the desk itself.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"VPN will not connect from home\",\n  \"body\": \"Quit the VPN client completely and open it again, then approve the second factor within 30 seconds.\",\n  \"keywords\": \"vpn, remote, connect\",\n  \"categoryId\": \"{{categoryId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"id\": \"01m1t2\",\n    \"title\": \"VPN will not connect from home\",\n    \"isActive\": true\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Edit or retire an article",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/knowledge/{{articleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "knowledge",
+                "{{articleId}}"
+              ]
+            },
+            "description": "Admins only. Send any combination of title, body, keywords, categoryId and isActive. Retiring keeps the article and its history but stops the assistant using it.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"VPN cannot connect from home\",\n  \"isActive\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "Retired",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/knowledge/{{articleId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "knowledge",
+                    "{{articleId}}"
+                  ]
+                },
+                "description": "Admins only. Send any combination of title, body, keywords, categoryId and isActive. Retiring keeps the article and its history but stops the assistant using it.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"VPN cannot connect from home\",\n  \"isActive\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": {\n    \"id\": \"01m1t2\",\n    \"title\": \"VPN cannot connect from home\",\n    \"isActive\": false\n  }\n}"
             }
           ]
         }

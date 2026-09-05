@@ -162,11 +162,34 @@ An admin can change a person's name, email, role and whether the account is acti
 
 `/roles` exists because role ids are generated when you seed, so they differ per installation and the frontend cannot hardcode them. It is what fills the role dropdown on the account screens.
 
+### The assistant
+
+| | | Who |
+|---|---|---|
+| `POST` | `/assistant/conversations` | Anyone, including guests |
+| `GET` | `/assistant/conversations/{id}` | Its participant, or admins |
+| `POST` | `/assistant/conversations/{id}/messages` | Its participant |
+| `POST` | `/assistant/conversations/{id}/tickets` | Its participant, signed in |
+| `POST` | `/assistant/conversations/{id}/claim` | The guest who was talking, once signed in |
+| `GET` | `/assistant/conversations` | Admins |
+
+### Knowledge
+
+| | | Who |
+|---|---|---|
+| `GET` | `/knowledge` | Admins |
+| `POST` | `/knowledge` | Admins |
+| `PATCH` | `/knowledge/{id}` | Admins |
+
 ### Reporting
 
 | | | Who |
 |---|---|---|
 | `GET` | `/metrics` | Admins |
+
+**The assistant** is how a user raises a ticket. `POST /tickets` returns 403 for the User role, and the access sweep asserts it. Moderators and admins keep the direct endpoint.
+
+Guests may talk to the assistant. They identify themselves with an `X-Assistant-Guest` header holding an identifier the first response gives them, and a guest who signs in can carry the conversation over with `claim`.
 
 ---
 
@@ -274,7 +297,7 @@ Every error looks the same:
 
 | | User | Moderator | Admin |
 |---|---|---|---|
-| Raise a ticket | yes | yes | yes |
+| Raise a ticket | through the assistant | yes | yes |
 | See a ticket | own only | any | any |
 | Reply to a ticket | own only | any | any |
 | See the shared queue | no | yes | yes |
@@ -283,6 +306,7 @@ Every error looks the same:
 | Delete a ticket | no | no | yes |
 | Manage categories | no | no | yes |
 | Manage accounts | no | no | yes |
+| Manage knowledge articles | no | no | yes |
 | Delete an account | no | no | yes |
 | See reporting | no | no | yes |
 
@@ -362,7 +386,7 @@ composer lint          # code formatting
 composer analyse       # static analysis
 ```
 
-180 tests. They run against a real MySQL database called `helpdesk_test`, not an in-memory stand-in, because the schema uses MySQL features that other engines do not have. Create it once:
+249 tests. They run against a real MySQL database called `helpdesk_test`, not an in-memory stand-in, because the schema uses MySQL features that other engines do not have. Create it once:
 
 ```sql
 CREATE DATABASE helpdesk_test CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
@@ -400,6 +424,42 @@ php artisan model:prune --model="App\Models\ActionLog"
 
 ---
 
+## The assistant
+
+A conversational assistant answers questions and raises tickets. It runs on the Laravel AI SDK with Anthropic, using `claude-haiku-4-5-20251001`.
+
+Three agents, each with only the tools for its job:
+
+| Agent | Does | Tools |
+|---|---|---|
+| Concierge | Owns the conversation, decides what the person needs, returns a reply plus a card | The other two agents |
+| Knowledge | Answers from the knowledge base and says when it cannot | Search the articles |
+| Triage | Checks for an existing ticket, then drafts one with a priority | Find the person's open tickets, list categories |
+
+Triage is not in a guest's tool list at all, so a guest cannot reach ticket data even if the model tries.
+
+**The model never creates a ticket.** It drafts one. The person edits it and confirms, and the server creates it with the priority the assistant chose, from the draft it kept, not from the request body. Every card the model proposes is checked against the database first: an unknown category or someone else's ticket id is downgraded to no card and logged.
+
+Conversations are stored in the SDK's `agent_conversations` tables. `assistant_sessions` records what the desk tracks about them: who, how it ended, how many turns and what it cost. A ticket raised this way carries `source` of `assistant` and the conversation id, and the transcript appears on the ticket for anyone who works the queue.
+
+Outcomes that depend on time are settled on a schedule:
+
+```bash
+php artisan assistant:settle-sessions
+```
+
+It runs every fifteen minutes under the scheduler. A conversation answered from the knowledge base and quiet for 30 minutes becomes `answered`; one left for 24 hours without a ticket becomes `abandoned`.
+
+**Configuration.** Set `ANTHROPIC_API_KEY` in `.env`. `ANTHROPIC_MODEL` overrides the model. `FRONTEND_URL` is where emailed links point.
+
+**Tests.** Everything is proved with the SDK's fakes, so the suite never calls Anthropic. Two tests do call it, and are skipped unless you ask:
+
+```bash
+ASSISTANT_LIVE_TESTS=1 php artisan test tests/Feature/Assistant/LiveAssistantTest.php
+```
+
+---
+
 ## Not built
 
 Left out on purpose, so the list reads as decisions rather than gaps:
@@ -421,6 +481,7 @@ app/
   Actions/          One class per thing the system can do
   Authorization/    Who can do what, and the check itself
   Queries/          Reading: the ticket list and the reporting numbers
+  Ai/               The assistant: agents, their tools, and card validation
   Support/          Tokens and other plumbing
   Http/             Routes, controllers, validation, response shapes
   Models/           The database tables as objects
@@ -432,5 +493,5 @@ docs/
   spec.md           The full design document and the reasoning behind it
   schema.dbml       The database diagram. Paste into dbdiagram.io
   helpdesk-api.postman_collection.json
-tests/              191 tests
+tests/              249 tests, plus 2 live ones that are skipped by default
 ```
