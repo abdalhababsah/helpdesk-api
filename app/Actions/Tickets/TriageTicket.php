@@ -2,6 +2,7 @@
 
 namespace App\Actions\Tickets;
 
+use App\Actions\Concerns\NotifiesRequester;
 use App\Actions\Concerns\RecordsActions;
 use App\Authorization\Actor;
 use App\Enums\ActionType;
@@ -10,6 +11,7 @@ use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Exceptions\InvalidStatusTransition;
 use App\Models\Ticket;
+use App\Notifications\TicketStatusChanged;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -19,7 +21,7 @@ use Illuminate\Support\Facades\DB;
  */
 final class TriageTicket
 {
-    use RecordsActions;
+    use NotifiesRequester, RecordsActions;
 
     public function handle(
         Actor $actor,
@@ -68,6 +70,8 @@ final class TriageTicket
                     'from' => $from->value,
                     'to' => $status->value,
                 ]);
+
+                $this->notifyRequester($ticket, $actor, new TicketStatusChanged($ticket, $from, $status));
             }
 
             $ticket->save();

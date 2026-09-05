@@ -2,6 +2,7 @@
 
 namespace App\Actions\Tickets;
 
+use App\Actions\Concerns\NotifiesRequester;
 use App\Actions\Concerns\RecordsActions;
 use App\Authorization\Actor;
 use App\Enums\ActionType;
@@ -10,11 +11,12 @@ use App\Enums\RoleSlug;
 use App\Exceptions\InvalidAssignee;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Notifications\TicketAssigned;
 use Illuminate\Support\Facades\DB;
 
 final class AssignTicket
 {
-    use RecordsActions;
+    use NotifiesRequester, RecordsActions;
 
     /** Passing null unassigns, returning the ticket to the queue. */
     public function handle(Actor $actor, Ticket $ticket, ?string $assigneeId): Ticket
@@ -41,6 +43,12 @@ final class AssignTicket
                 ['from' => $previous, 'to' => $assigneeId],
             );
 
+            // Only when it gains an owner. Being handed back to the queue is
+            // not something the requester can act on.
+            if ($assigneeId !== null) {
+                $this->notifyRequester($ticket, $actor, new TicketAssigned($ticket, User::findOrFail($assigneeId)));
+            }
+
             return $ticket;
         });
     }
@@ -49,7 +57,10 @@ final class AssignTicket
     {
         $ok = User::where('id', $assigneeId)
             ->where('is_active', true)
-            ->whereRelation('role', 'slug', '!=', RoleSlug::User->value)
+            ->whereHas('role', fn ($role) => $role->whereIn(
+                'slug',
+                array_map(fn (RoleSlug $slug): string => $slug->value, RoleSlug::assignable()),
+            ))
             ->exists();
 
         if (! $ok) {

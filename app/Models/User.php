@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 
 /**
@@ -25,7 +26,7 @@ use Illuminate\Support\Carbon;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use Concerns\HasMillisecondTimestamps, HasFactory, HasUlids;
+    use Concerns\HasMillisecondTimestamps, HasFactory, HasUlids, Notifiable;
 
     protected $fillable = ['name', 'email', 'password', 'role_id', 'is_active'];
 
