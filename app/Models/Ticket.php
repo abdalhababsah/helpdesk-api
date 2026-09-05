@@ -31,6 +31,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property-read bool $is_overdue
+ * @property-read int|null $comments_count
  */
 class Ticket extends Model implements Ownable
 {

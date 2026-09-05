@@ -1,0 +1,101 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Actions\Accounts\ChangeAccountRole;
+use App\Actions\Accounts\CreateAccount;
+use App\Actions\Accounts\SetAccountActive;
+use App\Authorization\Actor;
+use App\Enums\PermissionSlug;
+use App\Enums\RoleSlug;
+use App\Http\Requests\UserIndexRequest;
+use App\Http\Requests\UserStoreRequest;
+use App\Http\Requests\UserUpdateRequest;
+use App\Http\Resources\AssignableUserResource;
+use App\Http\Resources\UserResource;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
+
+final class UserController extends Controller
+{
+    public function index(UserIndexRequest $request, Actor $actor): JsonResponse
+    {
+        $actor->authorize(PermissionSlug::AccountManage);
+
+        $page = User::query()
+            ->with('role:id,slug')
+            ->when($request->filled('role'), fn ($query) => $query->whereRelation('role', 'slug', $request->query('role')))
+            ->when($request->has('isActive'), fn ($query) => $query->where('is_active', $request->boolean('isActive')))
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $like = '%'.addcslashes((string) $request->query('search'), '%_\\').'%';
+                $query->where(fn ($inner) => $inner->where('name', 'like', $like)->orWhere('email', 'like', $like));
+            })
+            ->orderBy('name')
+            // Names are not unique, so the identifier keeps the order stable
+            // between pages.
+            ->orderBy('id')
+            ->paginate(
+                perPage: $request->integer('limit', (int) config('tickets.pagination.default_limit')),
+                page: $request->integer('page', 1),
+            );
+
+        return response()->json([
+            'data' => UserResource::collection($page->items()),
+            'pagination' => [
+                'page' => $page->currentPage(),
+                'limit' => $page->perPage(),
+                'totalItems' => $page->total(),
+                'totalPages' => $page->lastPage(),
+            ],
+        ]);
+    }
+
+    /** Active agents only, as names. Backs the assignee picker. */
+    public function assignable(Actor $actor): JsonResponse
+    {
+        $actor->authorize(PermissionSlug::TicketAssign);
+
+        $agents = User::query()
+            ->with('role:id,slug')
+            ->where('is_active', true)
+            ->whereRelation('role', 'slug', '!=', RoleSlug::User->value)
+            ->orderBy('name')
+            ->get();
+
+        return response()->json(['data' => AssignableUserResource::collection($agents)]);
+    }
+
+    public function store(UserStoreRequest $request, Actor $actor, CreateAccount $create): JsonResponse
+    {
+        $user = $create->handle(
+            actor: $actor,
+            name: $request->string('name')->toString(),
+            email: $request->string('email')->toString(),
+            password: $request->string('password')->toString(),
+            roleId: $request->string('roleId')->toString(),
+        );
+
+        return response()->json(['data' => new UserResource($user->load('role:id,slug'))], 201);
+    }
+
+    public function update(
+        UserUpdateRequest $request,
+        Actor $actor,
+        User $user,
+        ChangeAccountRole $changeRole,
+        SetAccountActive $setActive,
+    ): JsonResponse {
+        // Not wrapped in one transaction on purpose: each action revokes the
+        // target's sessions, and doing that twice in one transaction would
+        // increment the token version twice for a single administrative act.
+        if ($request->has('roleId')) {
+            $changeRole->handle($actor, $user, $request->string('roleId')->toString());
+        }
+
+        if ($request->has('isActive')) {
+            $setActive->handle($actor, $user, $request->boolean('isActive'));
+        }
+
+        return response()->json(['data' => new UserResource($user->fresh()->load('role:id,slug'))]);
+    }
+}

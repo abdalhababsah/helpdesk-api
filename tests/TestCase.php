@@ -37,9 +37,21 @@ abstract class TestCase extends BaseTestCase
         ];
     }
 
-    /** @param  array<string, mixed>  $headers */
+    /**
+     * Headers set on the test instance persist across requests, so without
+     * flushing first an earlier call's token would still be attached and a
+     * request meant to be anonymous would quietly be authenticated.
+     *
+     * @param  array<string, mixed>  $headers
+     */
     protected function asUser(string $token, array $headers = []): static
     {
-        return $this->withHeaders(['Authorization' => "Bearer {$token}"] + $headers);
+        return $this->flushHeaders()->withHeaders(['Authorization' => "Bearer {$token}"] + $headers);
+    }
+
+    /** Explicitly unauthenticated, for tests that alternate between the two. */
+    protected function asGuest(): static
+    {
+        return $this->flushHeaders();
     }
 }

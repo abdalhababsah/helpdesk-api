@@ -43,6 +43,41 @@ final class TicketQuery
         };
     }
 
+    /**
+     * The counters above the queue.
+     *
+     * One pass with conditional sums rather than four counts: the strip is
+     * rendered on every queue load, and four scans of the same rows to answer
+     * four questions about them is three too many.
+     *
+     * Unassigned and mine are limited to unresolved work. A finished ticket
+     * with no owner is history, not something waiting in the queue.
+     *
+     * @return array<string, int>
+     */
+    public function summaryFor(Actor $actor): array
+    {
+        $unresolved = array_map(fn (TicketStatus $s): string => $s->value, TicketStatus::open());
+        $placeholders = implode(',', array_fill(0, count($unresolved), '?'));
+
+        $row = $this->visibleTo($actor)
+            ->selectRaw(
+                "SUM(assignee_id IS NULL AND status IN ({$placeholders})) AS unassigned,"
+                ."SUM(assignee_id = ? AND status IN ({$placeholders})) AS assigned_to_me,"
+                ."SUM(due_at < ? AND status IN ({$placeholders})) AS overdue,"
+                .'SUM(resolved_at >= ?) AS resolved_today',
+                [...$unresolved, $actor->id(), ...$unresolved, now(), ...$unresolved, now()->startOfDay()],
+            )
+            ->first();
+
+        return [
+            'unassigned' => (int) ($row->unassigned ?? 0),
+            'assignedToMe' => (int) ($row->assigned_to_me ?? 0),
+            'overdue' => (int) ($row->overdue ?? 0),
+            'resolvedToday' => (int) ($row->resolved_today ?? 0),
+        ];
+    }
+
     /** @return LengthAwarePaginator<int, Ticket> */
     public function paginate(Actor $actor, TicketFilters $filters): LengthAwarePaginator
     {
