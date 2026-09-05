@@ -8,7 +8,9 @@ use App\Exceptions\InvalidAssignee;
 use App\Exceptions\InvalidStatusTransition;
 use App\Exceptions\LastAdminProtected;
 use App\Exceptions\TicketIsClosed;
+use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\Authenticate;
+use App\Http\Middleware\VerifyRefreshOrigin;
 use App\Support\DenialRecorder;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -28,8 +30,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Behind a proxy, load balancer or CDN, the client address is a header
+        // rather than the socket. Without this every request looks like it came
+        // from the proxy, and the per-address rate limits become one shared
+        // bucket that locks out everybody at once.
+        $middleware->trustProxies(at: env('TRUSTED_PROXIES'));
+
+        $middleware->api(prepend: [AssignRequestId::class]);
+
         $middleware->alias([
             'auth.jwt' => Authenticate::class,
+            'origin.refresh' => VerifyRefreshOrigin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -84,4 +95,25 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(fn (ModelNotFoundException $e) => $error('NOT_FOUND', 'Resource not found.', 404));
         $exceptions->render(fn (NotFoundHttpException $e) => $error('NOT_FOUND', 'Resource not found.', 404));
         $exceptions->render(fn (ThrottleRequestsException $e) => $error('RATE_LIMITED', 'Too many attempts.', 429));
+
+        // Last, so anything not handled above still comes back in the same
+        // shape. Without it an unexpected failure returns Laravel's own body,
+        // which has no error code, and a client that switches on the code has
+        // nothing to switch on for exactly the responses nobody tested.
+        // The detail stays in the log; the client gets the request id instead,
+        // which is enough to find it.
+        $exceptions->render(function (Throwable $e, Request $request) use ($error) {
+            if (config('app.debug')) {
+                return null;
+            }
+
+            report($e);
+
+            return $error(
+                'INTERNAL',
+                'Something went wrong. Quote this reference when reporting it: '
+                    .$request->headers->get(AssignRequestId::HEADER, 'unknown'),
+                500,
+            );
+        });
     })->create();

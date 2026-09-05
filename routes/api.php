@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MetricsController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TicketCommentController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UserController;
@@ -12,7 +13,7 @@ Route::get('/health', fn () => response()->json(['data' => ['status' => 'ok']]))
 
 Route::prefix('auth')->group(function (): void {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
-    Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('throttle:refresh');
+    Route::post('/refresh', [AuthController::class, 'refresh'])->middleware(['throttle:refresh', 'origin.refresh']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::middleware('auth.jwt')->group(function (): void {
@@ -37,6 +38,8 @@ Route::middleware('auth.jwt')->group(function (): void {
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::post('/categories', [CategoryController::class, 'store']);
     Route::patch('/categories/{category}', [CategoryController::class, 'update']);
+
+    Route::get('/roles', [RoleController::class, 'index']);
 
     Route::get('/users', [UserController::class, 'index']);
     Route::post('/users', [UserController::class, 'store']);
