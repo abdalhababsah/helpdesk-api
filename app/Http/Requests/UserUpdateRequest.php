@@ -12,6 +12,11 @@ final class UserUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'name' => ['sometimes', 'string', 'min:2', 'max:120'],
+            // Ignores this account, or saving a form without touching the
+            // address would collide with the row being edited.
+            'email' => ['sometimes', 'email:rfc', 'max:255',
+                Rule::unique('users', 'email')->ignore($this->route('user')?->getKey())],
             'roleId' => ['sometimes', 'string', Rule::exists('roles', 'id')],
             'isActive' => ['sometimes', 'boolean'],
         ];
@@ -29,8 +34,8 @@ final class UserUpdateRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
-                if (! $this->hasAny(['roleId', 'isActive'])) {
-                    $validator->errors()->add('roleId', 'Provide at least one field to change.');
+                if (! $this->hasAny(['name', 'email', 'roleId', 'isActive'])) {
+                    $validator->errors()->add('name', 'Provide at least one field to change.');
                 }
             },
         ];

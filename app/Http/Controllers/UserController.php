@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Accounts\ChangeAccountRole;
 use App\Actions\Accounts\CreateAccount;
 use App\Actions\Accounts\SetAccountActive;
+use App\Actions\Accounts\UpdateAccountDetails;
 use App\Authorization\Actor;
 use App\Enums\PermissionSlug;
 use App\Enums\RoleSlug;
@@ -58,7 +59,10 @@ final class UserController extends Controller
         $agents = User::query()
             ->with('role:id,slug')
             ->where('is_active', true)
-            ->whereRelation('role', 'slug', '!=', RoleSlug::User->value)
+            ->whereHas('role', fn ($role) => $role->whereIn(
+                'slug',
+                array_map(fn (RoleSlug $slug): string => $slug->value, RoleSlug::assignable()),
+            ))
             ->orderBy('name')
             ->get();
 
@@ -82,9 +86,19 @@ final class UserController extends Controller
         UserUpdateRequest $request,
         Actor $actor,
         User $user,
+        UpdateAccountDetails $updateDetails,
         ChangeAccountRole $changeRole,
         SetAccountActive $setActive,
     ): JsonResponse {
+        if ($request->hasAny(['name', 'email'])) {
+            $updateDetails->handle(
+                $actor,
+                $user,
+                $request->has('name') ? $request->string('name')->toString() : null,
+                $request->has('email') ? $request->string('email')->toString() : null,
+            );
+        }
+
         // Not wrapped in one transaction on purpose: each action revokes the
         // target's sessions, and doing that twice in one transaction would
         // increment the token version twice for a single administrative act.

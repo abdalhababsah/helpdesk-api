@@ -37,23 +37,8 @@ enum ActionType: string
     case CategoryRestored = 'category.restored';
 
     case AccountCreated = 'account.created';
+    case AccountDetailsChanged = 'account.details_changed';
     case AccountRoleChanged = 'account.role_changed';
     case AccountDeactivated = 'account.deactivated';
     case AccountReactivated = 'account.reactivated';
-
-    public function group(): string
-    {
-        return explode('.', $this->value)[0];
-    }
-
-    /** Events worth surfacing on a security review rather than an activity feed. */
-    public function isSecurityEvent(): bool
-    {
-        return in_array($this, [
-            self::LoginFailed,
-            self::LoginBlocked,
-            self::TokenReuseDetected,
-            self::AuthorizationDenied,
-        ], true);
-    }
 }
