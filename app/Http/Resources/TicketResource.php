@@ -25,6 +25,7 @@ class TicketResource extends JsonResource
             'subject' => $this->subject,
             'status' => $this->status->value,
             'priority' => $this->priority->value,
+            'source' => $this->source->value,
             // Nested rather than bare identifiers, so a table renders without a
             // second request or a client-side join.
             'category' => [

@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\AssistantConversationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\KnowledgeArticleController;
 use App\Http\Controllers\MetricsController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RoleController;
@@ -25,7 +27,19 @@ Route::prefix('auth')->group(function (): void {
     });
 });
 
+// Guests may talk to the assistant, so these authenticate only when a token is
+// actually sent. Every route still proves the conversation is the caller's.
+Route::prefix('assistant')->middleware('auth.optional')->group(function (): void {
+    Route::post('/conversations', [AssistantConversationController::class, 'store'])->middleware('throttle:assistant-start');
+    Route::get('/conversations/{session}', [AssistantConversationController::class, 'show']);
+    Route::post('/conversations/{session}/messages', [AssistantConversationController::class, 'message'])->middleware('throttle:assistant-message');
+    Route::post('/conversations/{session}/tickets', [AssistantConversationController::class, 'ticket']);
+    Route::post('/conversations/{session}/claim', [AssistantConversationController::class, 'claim']);
+});
+
 Route::middleware('auth.jwt')->group(function (): void {
+    Route::get('/assistant/conversations', [AssistantConversationController::class, 'index']);
+
     // Fixed segments are declared before the parameterised ones, or the router
     // would try to resolve "summary" and "assignable" as record identifiers.
     Route::get('/tickets/summary', [TicketController::class, 'summary']);
@@ -51,5 +65,8 @@ Route::middleware('auth.jwt')->group(function (): void {
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
     Route::post('/users/{user}/password-reset', [UserController::class, 'sendPasswordReset']);
 
+    Route::get('/knowledge', [KnowledgeArticleController::class, 'index']);
+    Route::post('/knowledge', [KnowledgeArticleController::class, 'store']);
+    Route::patch('/knowledge/{article}', [KnowledgeArticleController::class, 'update']);
     Route::get('/metrics', [MetricsController::class, 'index']);
 });

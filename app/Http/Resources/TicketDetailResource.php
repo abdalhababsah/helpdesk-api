@@ -15,6 +15,9 @@ final class TicketDetailResource extends TicketResource
             'description' => $this->description,
             'closedAt' => $this->closed_at?->toIso8601String(),
             'comments' => TicketCommentResource::collection($this->whenLoaded('comments')),
+            // Only present for someone who works the queue, and only when the
+            // ticket came out of a conversation. The requester was there.
+            'transcript' => $this->whenNotNull($this->transcript ?? null),
         ];
     }
 }
