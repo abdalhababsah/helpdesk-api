@@ -26,5 +26,11 @@ return [
          * or user requests and cannot be leaked by an unrelated handler.
          */
         'path' => '/api/auth',
+        /*
+         * Lax when the frontend shares this origin. A frontend on its own
+         * domain needs None, which browsers only honour on a secure cookie,
+         * so it is rejected here unless the app is running over HTTPS.
+         */
+        'same_site' => env('REFRESH_SAME_SITE', 'lax'),
     ],
 ];

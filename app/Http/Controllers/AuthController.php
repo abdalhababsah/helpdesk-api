@@ -90,11 +90,21 @@ final class AuthController extends Controller
             secure: app()->environment('production'),
             httpOnly: true,
             raw: false,
-            // Lax rather than Strict: Strict withholds the cookie on inbound
-            // navigation from another site, so a shared filtered link would
-            // land the user logged out.
-            sameSite: 'lax',
+            sameSite: $this->refreshSameSite(),
         );
+    }
+
+
+
+    private function refreshSameSite(): string
+    {
+        $configured = strtolower((string) config('jwt.refresh.same_site', 'lax'));
+
+        if ($configured === 'none' && ! app()->environment('production')) {
+            return 'lax';
+        }
+
+        return in_array($configured, ['lax', 'strict', 'none'], true) ? $configured : 'lax';
     }
 
     private function forgetCookie(): Cookie
