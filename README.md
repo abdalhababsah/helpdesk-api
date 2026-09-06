@@ -409,7 +409,6 @@ Left out on purpose, so the list reads as decisions rather than gaps:
 - Emails to anyone other than the person who raised the ticket
 - Threaded replies. The thread is flat
 - Live updates. The queue does not push changes to open browsers
-- A screen for editing permissions. The tables support it, but the roles are fixed
 - More than one role per person
 
 ---
@@ -429,7 +428,6 @@ database/
   seeders/          The demo data
   factories/        Test data
 docs/
-  spec.md           The full design document and the reasoning behind it
   schema.dbml       The database diagram. Paste into dbdiagram.io
   helpdesk-api.postman_collection.json
 tests/              191 tests
